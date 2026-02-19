@@ -4,6 +4,10 @@
 @layer base {
   :root {
     color-scheme: light;
+    --tech-blue: #0ea5e9;
+    --med-green: #10b981;
+    --tech-blue-dark: #0284c7;
+    --med-green-dark: #059669;
   }
 
   html {
@@ -12,14 +16,46 @@
 
   body {
     @apply m-0 min-h-screen antialiased;
-    font-family: "Nunito", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-family:
+      "Source Han Sans SC VF", "Nunito", "Microsoft YaHei UI",
+      "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC",
+      sans-serif;
+    font-weight: 400;
     background:
-      radial-gradient(circle at 16% 8%, rgb(255 230 205 / 72%), transparent 30%),
-      radial-gradient(circle at 84% 14%, rgb(214 240 205 / 58%), transparent 32%),
+      radial-gradient(
+        circle at 16% 8%,
+        rgb(255 230 205 / 72%),
+        transparent 30%
+      ),
+      radial-gradient(
+        circle at 84% 14%,
+        rgb(255 237 213 / 60%),
+        transparent 32%
+      ),
       linear-gradient(180deg, #fffaf4 0%, #fff6ef 42%, #fff9f5 100%);
     color: #3d2c24;
     touch-action: manipulation;
     -webkit-tap-highlight-color: rgb(255 139 89 / 20%);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family:
+      "Smiley Sans Oblique", "Nunito", "Microsoft YaHei UI", "Microsoft YaHei",
+      "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+    letter-spacing: 0.04em;
+  }
+}
+
+@layer utilities {
+  .font-rounded-chinese {
+    font-family:
+      "Smiley Sans Oblique", "Nunito", "Yuanti SC", "YouYuan", "STYuanti",
+      "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
   }
 }
 
@@ -42,6 +78,73 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes scan-light {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+@keyframes breathe-shadow {
+  0%,
+  100% {
+    box-shadow: 0 8px 30px rgb(0, 0, 0, 0.04);
+  }
+  50% {
+    box-shadow: 0 8px 30px rgb(0, 0, 0, 0.08);
+  }
+}
+
+@keyframes flow-blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(60px, -80px) scale(1.15);
+  }
+  66% {
+    transform: translate(-40px, 40px) scale(0.85);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes flow-blob-reverse {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(-60px, 80px) scale(0.85);
+  }
+  66% {
+    transform: translate(40px, -40px) scale(1.15);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: flow-blob 15s ease-in-out infinite;
+}
+
+.animate-blob-reverse {
+  animation: flow-blob-reverse 18s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
