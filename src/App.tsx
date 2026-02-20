@@ -1,3 +1,10 @@
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +20,7 @@ import {
   Activity,
   AlertCircle,
   Cat,
+  ChevronsDown,
   CheckCircle2,
   Database,
   Dog,
@@ -27,6 +35,7 @@ import {
   Stethoscope,
   TrendingUp,
   UserRoundCheck,
+  type LucideIcon,
 } from "lucide-react";
 import "./index.css";
 
@@ -185,7 +194,368 @@ const personaStyles = [
   "border-[#e7d8f2] bg-[#faf6ff]",
 ];
 
+type StoryChapter = {
+  id: string;
+  phase: string;
+  title: string;
+  description: string;
+  metrics: {
+    label: string;
+    value: string;
+    icon: LucideIcon;
+    color: string;
+    bgColor: string;
+  }[];
+};
+
+const storyChapters: StoryChapter[] = [
+  {
+    id: "proof",
+    phase: "第二章节",
+    title: "专业数据与兽医监制，只为更精准的判断",
+    description: "滚动查看核心背书，手机动效会在本章节中持续保持联动。",
+    metrics: endorsements,
+  },
+];
+
+function FullscreenStory({
+  chapters,
+  onEntryProgressChange,
+}: {
+  chapters: StoryChapter[];
+  onEntryProgressChange?: (progress: number) => void;
+}) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const entryRef = useRef(0);
+  const [progress, setProgress] = useState(0);
+  const [entryProgress, setEntryProgress] = useState(0);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) {
+      return;
+    }
+
+    let frame = 0;
+
+    const update = () => {
+      frame = 0;
+      const rect = section.getBoundingClientRect();
+      const entry = Math.min(
+        1,
+        Math.max(0, (window.innerHeight - rect.top) / window.innerHeight),
+      );
+      const travel = rect.height - window.innerHeight;
+      if (travel <= 0) {
+        setProgress(0);
+        if (Math.abs(entryRef.current - entry) >= 0.001) {
+          entryRef.current = entry;
+          setEntryProgress(entry);
+          onEntryProgressChange?.(entry);
+        }
+        return;
+      }
+      const next = Math.min(1, Math.max(0, -rect.top / travel));
+      setProgress((prev) => (Math.abs(prev - next) < 0.001 ? prev : next));
+      if (Math.abs(entryRef.current - entry) >= 0.001) {
+        entryRef.current = entry;
+        setEntryProgress(entry);
+        onEntryProgressChange?.(entry);
+      }
+    };
+
+    const requestUpdate = () => {
+      if (frame) {
+        return;
+      }
+      frame = window.requestAnimationFrame(update);
+    };
+
+    requestUpdate();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    return () => {
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+      if (frame) {
+        window.cancelAnimationFrame(frame);
+      }
+    };
+  }, [onEntryProgressChange]);
+
+  const activeIndex = useMemo(() => {
+    if (!chapters.length) {
+      return 0;
+    }
+    return Math.min(chapters.length - 1, Math.floor(progress * chapters.length));
+  }, [chapters.length, progress]);
+
+  const activeChapter = chapters[activeIndex];
+  if (!activeChapter) {
+    return null;
+  }
+
+  const sceneStyle = {
+    "--scene-entry": `${entryProgress}`,
+  } as CSSProperties;
+
+  return (
+    <section
+      className="fullscreen-story"
+      id="proof"
+      aria-label="章节全屏过渡动画"
+      ref={sectionRef}
+    >
+      <div className="fullscreen-story__sticky" style={sceneStyle}>
+        <div className="fullscreen-story__content">
+          <p className="text-sm font-semibold tracking-[0.12em] text-[#9c5f3f] uppercase">
+            {activeChapter.phase}
+          </p>
+          <h2 className="mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
+            {activeChapter.title}
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#593828]">
+            {activeChapter.description}
+          </p>
+
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {heroTags.map((tag) => (
+              <span
+                key={tag.text}
+                className="inline-flex items-center gap-1 rounded-full border border-[#e6ccb8] bg-white/75 px-3 py-1 text-xs font-semibold text-[#6b4a36]"
+              >
+                <tag.icon className="size-3.5 text-[#ff8b59]" />
+                {tag.text}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {activeChapter.metrics.map((item) => (
+              <div
+                className="rounded-2xl border border-[#ead8ca] bg-white/80 px-3 py-3 text-center backdrop-blur-sm"
+                key={item.label}
+              >
+                <div
+                  className={`mx-auto mb-2 flex size-10 items-center justify-center rounded-xl ${item.bgColor} ${item.color}`}
+                >
+                  <item.icon className="size-5" />
+                </div>
+                <div className={`text-xl font-black ${item.color}`}>{item.value}</div>
+                <div className="mt-1 text-xs font-medium text-[#6d4c34] sm:text-sm">
+                  {item.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {chapters.length > 1 ? (
+            <div className="mt-5 flex justify-center gap-2" aria-hidden="true">
+              {chapters.map((chapter, idx) => (
+                <span
+                  className={`h-1.5 rounded-full transition-all ${
+                    idx === activeIndex
+                      ? "w-8 bg-[#ff8b59]"
+                      : "w-3 bg-[#ebd7c7]"
+                  }`}
+                  key={chapter.id}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
+type PhonePose = {
+  x: number;
+  y: number;
+  width: number;
+  rotate: number;
+  opacity: number;
+};
+
+function lerp(from: number, to: number, t: number) {
+  return from + (to - from) * t;
+}
+
+function SharedPhone() {
+  return (
+    <div className="shared-phone">
+      <div className="shared-phone__notch" />
+      <div className="flex h-[600px] flex-col bg-[#fff9f4]">
+        <div className="flex items-center justify-between px-6 pt-6 pb-2">
+          <div>
+            <div className="text-xs text-[#8c6b5d]">下午 2:30</div>
+            <div className="text-lg font-bold text-[#3d2c24]">今日健康</div>
+          </div>
+          <div className="size-8 rounded-full bg-[#ffd6bb]" />
+        </div>
+
+        <div className="mx-4 mt-2 rounded-3xl bg-white p-6 shadow-soft">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-[#8c6b5d]">综合评分</span>
+            <span className="rounded-full bg-[#e6f4e2] px-2 py-0.5 text-xs font-bold text-[#4c8b3e]">
+              状态良好
+            </span>
+          </div>
+          <div className="mt-4 flex items-end gap-2">
+            <span className="text-5xl font-black text-[#3d2c24]">85</span>
+            <span className="mb-1.5 text-sm text-[#8c6b5d]">/ 100</span>
+          </div>
+          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
+            <div className="h-full w-[85%] rounded-full bg-gradient-to-r from-[#ffcfb5] to-[#ff9362]" />
+          </div>
+        </div>
+
+        <div className="group mx-4 mt-4 cursor-pointer overflow-hidden rounded-2xl bg-white shadow-soft transition-transform hover:scale-[1.02]">
+          <div className="relative aspect-[16/9]">
+            <img
+              src={dogMonitorShot}
+              alt="智能小宠"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+            />
+            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-md">
+              <div className="size-1.5 animate-pulse rounded-full bg-[#4c8b3e]" />
+              <span className="text-[10px] font-bold tracking-wide text-white">LIVE</span>
+            </div>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pb-6 pt-12">
+              <div className="flex items-end justify-between text-white">
+                <div>
+                  <div className="mb-1 text-[10px] font-medium opacity-90">当前状态</div>
+                  <div className="text-sm font-bold leading-normal">安静休息中</div>
+                </div>
+                <div className="flex gap-4 text-right">
+                  <div>
+                    <div className="mb-1 text-[10px] font-medium opacity-90">情绪</div>
+                    <div className="text-xs font-bold leading-normal">平稳</div>
+                  </div>
+                  <div>
+                    <div className="mb-1 text-[10px] font-medium opacity-90">
+                      活跃度
+                    </div>
+                    <div className="text-xs font-bold leading-normal">中等</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-4 mt-4 flex-1 rounded-t-3xl bg-white p-6 shadow-soft">
+          <div className="mb-4 text-sm font-bold text-[#3d2c24]">实时监测记录</div>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-1 size-2 rounded-full bg-[#ff9362]" />
+              <div>
+                <div className="text-sm font-medium text-[#3d2c24]">检测到异常叫声</div>
+                <div className="text-xs text-[#8c6b5d]">14:20 · 持续 15秒 · 建议关注</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="mt-1 size-2 rounded-full bg-[#d8efcf]" />
+              <div>
+                <div className="text-sm font-medium text-[#3d2c24]">进食记录</div>
+                <div className="text-xs text-[#8c6b5d]">12:30 · 摄入 45g · 正常</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function App() {
+  const [storyEntry, setStoryEntry] = useState(0);
+  const heroPhoneAnchorRef = useRef<HTMLDivElement>(null);
+  const [phonePose, setPhonePose] = useState<PhonePose>({
+    x: 0,
+    y: 0,
+    width: 0,
+    rotate: 0,
+    opacity: 0,
+  });
+
+  useEffect(() => {
+    let frame = 0;
+
+    const update = () => {
+      frame = 0;
+      const heroRect = heroPhoneAnchorRef.current?.getBoundingClientRect();
+      if (!heroRect) {
+        return;
+      }
+
+      const t = Math.min(1, Math.max(0, storyEntry));
+      const widthRatio =
+        window.innerWidth <= 640 ? 0.84 : window.innerWidth <= 1024 ? 0.76 : 0.72;
+      const bottomGap = window.innerWidth <= 640 ? 16 : 24;
+      const maxWidthByHeight = Math.max(
+        0,
+        ((window.innerHeight - bottomGap * 2) * 390) / 844,
+      );
+      const targetWidth = Math.max(
+        0,
+        Math.min(360, window.innerWidth * widthRatio, maxWidthByHeight),
+      );
+      const targetHeight = (targetWidth * 844) / 390;
+      const targetX = (window.innerWidth - targetWidth) / 2;
+      const visibleRatio =
+        window.innerWidth <= 640 ? 0.82 : window.innerWidth <= 1024 ? 0.72 : 0.66;
+      const targetY = window.innerHeight - targetHeight * visibleRatio;
+
+      const x = lerp(heroRect.left, targetX, t);
+      const y = lerp(heroRect.top, targetY, t);
+      const width = lerp(heroRect.width, targetWidth, t);
+      const height = (width * 844) / 390;
+      const rotate = lerp(-4, 0, t);
+      const visible =
+        width > 0 && height > 0 && y < window.innerHeight && y + height > 0;
+      const opacity = visible ? 1 : 0;
+
+      setPhonePose((prev) => {
+        if (
+          Math.abs(prev.x - x) < 0.5 &&
+          Math.abs(prev.y - y) < 0.5 &&
+          Math.abs(prev.width - width) < 0.5 &&
+          Math.abs(prev.rotate - rotate) < 0.15 &&
+          Math.abs(prev.opacity - opacity) < 0.01
+        ) {
+          return prev;
+        }
+
+        return { x, y, width, rotate, opacity };
+      });
+    };
+
+    const requestUpdate = () => {
+      if (frame) {
+        return;
+      }
+      frame = window.requestAnimationFrame(update);
+    };
+
+    requestUpdate();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    return () => {
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+      if (frame) {
+        window.cancelAnimationFrame(frame);
+      }
+    };
+  }, [storyEntry]);
+
+  const scrollHintOpacity = Math.max(0, 1 - storyEntry * 10);
+  const scrollHintOffset = Math.min(14, storyEntry * 26);
+
   return (
     <div className="relative min-h-screen overflow-x-clip bg-transparent text-[#3d2c24]">
       <Header />
@@ -206,6 +576,22 @@ export function App() {
         className="pointer-events-none fixed left-[30%] bottom-[20%] size-[250px] rounded-full bg-[#fff1f2]/70 blur-[80px] animate-blob"
         style={{ animationDelay: "3s" }}
       />
+
+      <div
+        aria-hidden="true"
+        className="shared-phone-shell"
+        style={{
+          width: `${phonePose.width}px`,
+          opacity: phonePose.opacity,
+          transform: `translate3d(${phonePose.x}px, ${phonePose.y}px, 0) rotate(${phonePose.rotate}deg)`,
+        }}
+      >
+        <div
+          className={storyEntry < 0.02 ? "animate-[float_6s_ease-in-out_infinite]" : ""}
+        >
+          <SharedPhone />
+        </div>
+      </div>
 
       <header
         className="relative z-10 flex min-h-screen flex-col justify-center"
@@ -323,161 +709,42 @@ export function App() {
                   </span>
                 </div>
               </div>
+
             </div>
 
-            <div className="mx-auto w-full max-w-[320px] lg:max-w-[360px] animate-[float_6s_ease-in-out_infinite]">
-              <div className="relative overflow-hidden rounded-[2.5rem] border-[8px] border-[#3d2c24] bg-[#fffcf9] shadow-soft-lg animate-[breathe-shadow_4s_ease-in-out_infinite]">
-                {/* Screen Content */}
-                <div className="flex h-[600px] flex-col bg-[#fff9f4]">
-                  {/* Header */}
-                  <div className="flex items-center justify-between px-6 pt-6 pb-2">
-                    <div>
-                      <div className="text-xs text-[#8c6b5d]">下午 2:30</div>
-                      <div className="text-lg font-bold text-[#3d2c24]">
-                        今日健康
-                      </div>
-                    </div>
-                    <div className="size-8 rounded-full bg-[#ffd6bb]" />
-                  </div>
-
-                  {/* Score Card */}
-                  <div className="mx-4 mt-2 rounded-3xl bg-white p-6 shadow-soft">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-[#8c6b5d]">
-                        综合评分
-                      </span>
-                      <span className="rounded-full bg-[#e6f4e2] px-2 py-0.5 text-xs font-bold text-[#4c8b3e]">
-                        状态良好
-                      </span>
-                    </div>
-                    <div className="mt-4 flex items-end gap-2">
-                      <span className="text-5xl font-black text-[#3d2c24]">
-                        85
-                      </span>
-                      <span className="mb-1.5 text-sm text-[#8c6b5d]">
-                        / 100
-                      </span>
-                    </div>
-                    <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
-                      <div className="h-full w-[85%] rounded-full bg-gradient-to-r from-[#ffcfb5] to-[#ff9362]" />
-                    </div>
-                  </div>
-
-                  {/* Live Pet Monitor */}
-                  <div className="mx-4 mt-4 overflow-hidden rounded-2xl bg-white shadow-soft group cursor-pointer transition-transform hover:scale-[1.02]">
-                    <div className="relative aspect-[16/9]">
-                      <img
-                        src={dogMonitorShot}
-                        alt="智能小宠"
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-md">
-                        <div className="size-1.5 animate-pulse rounded-full bg-[#4c8b3e]" />
-                        <span className="text-[10px] font-bold text-white tracking-wide">
-                          LIVE
-                        </span>
-                      </div>
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pb-6 pt-12">
-                        <div className="flex items-end justify-between text-white">
-                          <div>
-                            <div className="text-[10px] font-medium opacity-90 mb-1">
-                              当前状态
-                            </div>
-                            <div className="text-sm font-bold leading-normal">
-                              安静休息中
-                            </div>
-                          </div>
-                          <div className="flex gap-4 text-right">
-                            <div>
-                              <div className="text-[10px] font-medium opacity-90 mb-1">
-                                情绪
-                              </div>
-                              <div className="text-xs font-bold leading-normal">
-                                平稳
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-[10px] font-medium opacity-90 mb-1">
-                                活跃度
-                              </div>
-                              <div className="text-xs font-bold leading-normal">
-                                中等
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Recent Alerts */}
-                  <div className="mx-4 mt-4 flex-1 rounded-t-3xl bg-white p-6 shadow-soft">
-                    <div className="mb-4 text-sm font-bold text-[#3d2c24]">
-                      实时监测记录
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 size-2 rounded-full bg-[#ff9362]" />
-                        <div>
-                          <div className="text-sm font-medium text-[#3d2c24]">
-                            检测到异常叫声
-                          </div>
-                          <div className="text-xs text-[#8c6b5d]">
-                            14:20 · 持续 15秒 · 建议关注
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 size-2 rounded-full bg-[#d8efcf]" />
-                        <div>
-                          <div className="text-sm font-medium text-[#3d2c24]">
-                            进食记录
-                          </div>
-                          <div className="text-xs text-[#8c6b5d]">
-                            12:30 · 摄入 45g · 正常
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div
+              className="hero-phone-anchor mx-auto w-full max-w-[320px] lg:max-w-[360px]"
+              ref={heroPhoneAnchorRef}
+              aria-hidden="true"
+            />
           </div>
+        </div>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-6 z-20 flex justify-center sm:bottom-8">
+          <a
+            href="#proof"
+            className="hero-scroll-hint pointer-events-auto inline-flex flex-col items-center gap-1 text-sm font-semibold text-[#734b39]"
+            aria-label="向下滚动查看详细内容"
+            style={{
+              opacity: scrollHintOpacity,
+              transform: `translateY(${scrollHintOffset}px)`,
+              pointerEvents: scrollHintOpacity < 0.12 ? "none" : "auto",
+            }}
+          >
+            <span className="hero-scroll-hint__mouse" aria-hidden="true">
+              <span className="hero-scroll-hint__wheel" />
+            </span>
+            <span className="hero-scroll-hint__text">向下滚动，继续查看</span>
+            <ChevronsDown className="hero-scroll-hint__arrow size-4 text-[#ff8b59]" />
+          </a>
         </div>
       </header>
 
       <main className="relative z-10" id="main">
-        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-white/60 px-6 py-10 shadow-soft-lg backdrop-blur-sm sm:py-14">
-            <div className="mx-auto max-w-3xl text-center">
-              <h2 className="text-2xl font-bold text-[#3f261c] sm:text-3xl">
-                专业数据与兽医监制，只为更精准的判断
-              </h2>
-            </div>
-            <div className="mt-10 grid grid-cols-2 gap-8 sm:grid-cols-4">
-              {endorsements.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex flex-col items-center text-center"
-                >
-                  <div
-                    className={`relative mb-3 flex size-14 overflow-hidden items-center justify-center rounded-2xl ${item.bgColor} ${item.color}`}
-                  >
-                    <div className="absolute inset-0 -skew-x-12 animate-[scan-light_3s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                    <item.icon className="relative z-10 size-7" />
-                  </div>
-                  <div className={`text-3xl font-black ${item.color}`}>
-                    {item.value}
-                  </div>
-                  <div className="mt-1 text-sm font-medium text-[#6d4c34]">
-                    {item.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <FullscreenStory
+          chapters={storyChapters}
+          onEntryProgressChange={setStoryEntry}
+        />
 
         <section
           className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8"
