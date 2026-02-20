@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Activity,
   AlertCircle,
   Cat,
   CheckCircle2,
@@ -29,6 +30,7 @@ import {
 } from "lucide-react";
 import "./index.css";
 
+import dogMonitorShot from "./assets/images/dog-monitor.jpg";
 import healthShot from "./assets/images/健康分析.png";
 import advisorShot from "./assets/images/健康顾问.png";
 import traceShotA from "./assets/images/追踪1.png";
@@ -40,16 +42,31 @@ const painCards = [
     title: "异常看不懂",
     detail: "宠物不会说话，轻微行为变化常被忽略或误读。",
     action: "AI 拍照、视频、录音识别联动，快速给出可执行判断。",
+    icon: ScanLine,
+    color: "text-[#ff8b59]",
+    bg: "bg-[#fff9f3]",
+    border: "border-[#f2d8c7]",
+    iconBg: "bg-[#ffe8d6]",
   },
   {
     title: "老病难区分",
     detail: "衰老现象和疾病信号容易混淆，决策依赖经验。",
     action: "健康基准线结合情绪热力图，持续比对风险趋势。",
+    icon: Activity,
+    color: "text-[#10b981]",
+    bg: "bg-[#f4fbef]",
+    border: "border-[#d9e9cf]",
+    iconBg: "bg-[#e1f5e9]",
   },
   {
     title: "就医决策重",
     detail: "信息不完整时就诊容易走弯路，成本和焦虑同步放大。",
     action: "症状追踪 + 病历管理 + 医生推荐，形成闭环决策链路。",
+    icon: Hospital,
+    color: "text-[#0ea5e9]",
+    bg: "bg-[#f0f9ff]",
+    border: "border-[#cfe8f6]",
+    iconBg: "bg-[#e0f2fe]",
   },
 ];
 
@@ -162,12 +179,6 @@ const endorsements = [
   },
 ];
 
-const valueStyles = [
-  "border-[#f2d8c7] bg-[#fff9f3]",
-  "border-[#d9e9cf] bg-[#f4fbef]",
-  "border-[#f6dcc8] bg-[#fff6ed]",
-];
-
 const personaStyles = [
   "border-[#f2d8c7] bg-[#fff9f4]",
   "border-[#d6e7d4] bg-[#f4fbf5]",
@@ -212,7 +223,7 @@ export function App() {
 
           <div className="grid items-center gap-10 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#e6cbb0] bg-white/60 px-4 py-1.5 text-xs sm:text-sm font-semibold text-[#7b4a2a] backdrop-blur-md animate-[fade-in-up_680ms_ease-out_both]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#e6cbb0] bg-gradient-to-r from-white/80 to-[#fff4ea]/80 px-4 py-1.5 text-xs sm:text-sm font-semibold text-[#7b4a2a] shadow-soft backdrop-blur-md animate-[fade-in-up_680ms_ease-out_both]">
                 <span className="flex items-center gap-1.5">
                   <span className="flex gap-0.5">
                     <Cat className="size-4 text-[#ff8b59]" />
@@ -226,13 +237,29 @@ export function App() {
                 </span>
               </div>
 
-              <h1 className="font-rounded-chinese mt-6 animate-[fade-in-up_680ms_ease-out_both] text-balance text-4xl font-black tracking-wider leading-tight text-[#3f261c] [animation-delay:110ms] md:text-5xl lg:text-6xl">
-                别让“再观察一下”
+              <h1 className="font-rounded-chinese mt-8 animate-[fade-in-up_680ms_ease-out_both] text-balance text-4xl font-black tracking-wider leading-tight text-[#3f261c] drop-shadow-sm [animation-delay:110ms] md:text-5xl lg:text-6xl">
+                别让
+                <span className="relative mx-1 whitespace-nowrap">
+                  <span className="relative z-10">“再观察一下”</span>
+                  <span className="absolute bottom-[0.15em] left-0 -z-10 h-[0.35em] w-full -rotate-1 rounded-sm bg-[#ffd6bb] opacity-90" />
+                </span>
                 <br />
-                错过最佳救治时机
+                错过
+                <span className="bg-gradient-to-r from-[#ff8b59] to-[#ff5b2e] bg-clip-text text-transparent">
+                  最佳救治时机
+                </span>
               </h1>
-              <p className="mt-6 max-w-2xl animate-[fade-in-up_680ms_ease-out_both] text-base leading-7 text-[#5a3928] [animation-delay:220ms] sm:text-lg">
-                猫咪躲藏、狗狗频繁舔舐...这些不仅是情绪，更是求救信号。AI它通过音视频多模态分析，实时解读异常行为，让爱不留遗憾。
+              <p className="mt-8 max-w-2xl animate-[fade-in-up_680ms_ease-out_both] text-lg font-medium leading-8 text-[#5a3928] [animation-delay:220ms] sm:text-xl">
+                猫咪躲藏、狗狗频繁舔舐...这些不仅是情绪，更是
+                <span className="font-bold text-[#7b4a2a] underline decoration-[#ff8b59]/40 underline-offset-4">
+                  求救信号
+                </span>
+                。
+                <br />
+                <span className="font-bold text-[#ff8b59]">AI它 APP</span>
+                通过音视频多模态分析，
+                <span className="font-bold text-[#7b4a2a]">实时解读</span>
+                异常行为，让爱不留遗憾。
               </p>
 
               <div className="mt-10 flex flex-wrap gap-3">
@@ -261,7 +288,7 @@ export function App() {
 
               <div className="mt-12 flex flex-col gap-4 border-t border-[#ebd8ca] pt-8 sm:flex-row sm:items-center sm:justify-between">
                 <div className="group flex items-center gap-2">
-                  <span className="flex size-10 items-center justify-center rounded-full bg-[#fffcf7] text-[#ff8b59] shadow-sm ring-1 ring-[#ebdccf] transition-transform group-hover:scale-110">
+                  <span className="flex size-10 items-center justify-center rounded-full bg-[#fffcf7] text-[#ff8b59] shadow-soft ring-1 ring-[#ebdccf] transition-transform group-hover:scale-110">
                     <ScanLine className="size-5" />
                   </span>
                   <span className="text-sm font-medium text-[#5a3a29]">
@@ -270,7 +297,7 @@ export function App() {
                 </div>
                 <div className="hidden h-8 w-px bg-[#ebd8ca] sm:block" />
                 <div className="group flex items-center gap-2">
-                  <span className="flex size-10 items-center justify-center rounded-full bg-[#fffcf7] text-[#ff8b59] shadow-sm ring-1 ring-[#ebdccf] transition-transform group-hover:scale-110">
+                  <span className="flex size-10 items-center justify-center rounded-full bg-[#fffcf7] text-[#ff8b59] shadow-soft ring-1 ring-[#ebdccf] transition-transform group-hover:scale-110">
                     <AlertCircle className="size-5" />
                   </span>
                   <span className="text-sm font-medium text-[#5a3a29]">
@@ -279,7 +306,7 @@ export function App() {
                 </div>
                 <div className="hidden h-8 w-px bg-[#ebd8ca] sm:block" />
                 <div className="group flex items-center gap-2">
-                  <span className="flex size-10 items-center justify-center rounded-full bg-[#fffcf7] text-[#ff8b59] shadow-sm ring-1 ring-[#ebdccf] transition-transform group-hover:scale-110">
+                  <span className="flex size-10 items-center justify-center rounded-full bg-[#fffcf7] text-[#ff8b59] shadow-soft ring-1 ring-[#ebdccf] transition-transform group-hover:scale-110">
                     <TrendingUp className="size-5" />
                   </span>
                   <span className="text-sm font-medium text-[#5a3a29]">
@@ -288,7 +315,7 @@ export function App() {
                 </div>
                 <div className="hidden h-8 w-px bg-[#ebd8ca] sm:block" />
                 <div className="group flex items-center gap-2">
-                  <span className="flex size-10 items-center justify-center rounded-full bg-[#fffcf7] text-[#ff8b59] shadow-sm ring-1 ring-[#ebdccf] transition-transform group-hover:scale-110">
+                  <span className="flex size-10 items-center justify-center rounded-full bg-[#fffcf7] text-[#ff8b59] shadow-soft ring-1 ring-[#ebdccf] transition-transform group-hover:scale-110">
                     <Stethoscope className="size-5" />
                   </span>
                   <span className="text-sm font-medium text-[#5a3a29]">
@@ -299,7 +326,7 @@ export function App() {
             </div>
 
             <div className="mx-auto w-full max-w-[320px] lg:max-w-[360px] animate-[float_6s_ease-in-out_infinite]">
-              <div className="relative overflow-hidden rounded-[2.5rem] border-[8px] border-[#3d2c24] bg-[#fffcf9] shadow-2xl animate-[breathe-shadow_4s_ease-in-out_infinite]">
+              <div className="relative overflow-hidden rounded-[2.5rem] border-[8px] border-[#3d2c24] bg-[#fffcf9] shadow-soft-lg animate-[breathe-shadow_4s_ease-in-out_infinite]">
                 {/* Screen Content */}
                 <div className="flex h-[600px] flex-col bg-[#fff9f4]">
                   {/* Header */}
@@ -314,7 +341,7 @@ export function App() {
                   </div>
 
                   {/* Score Card */}
-                  <div className="mx-4 mt-2 rounded-3xl bg-white p-6 shadow-sm">
+                  <div className="mx-4 mt-2 rounded-3xl bg-white p-6 shadow-soft">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-[#8c6b5d]">
                         综合评分
@@ -336,36 +363,55 @@ export function App() {
                     </div>
                   </div>
 
-                  {/* Stats Grid */}
-                  <div className="mx-4 mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl bg-white p-4 shadow-sm">
-                      <div className="text-xs text-[#8c6b5d]">情绪指数</div>
-                      <div className="mt-2 text-xl font-bold text-[#3d2c24]">
-                        平稳
-                      </div>
-                      <div className="mt-2 flex gap-1">
-                        <div className="h-8 w-2 rounded-full bg-[#ffcfb5]" />
-                        <div className="h-5 w-2 rounded-full bg-[#ffe4d6]" />
-                        <div className="h-10 w-2 rounded-full bg-[#ff9362]" />
-                        <div className="h-6 w-2 rounded-full bg-[#ffcfb5]" />
-                      </div>
-                    </div>
-                    <div className="rounded-2xl bg-white p-4 shadow-sm">
-                      <div className="text-xs text-[#8c6b5d]">活跃度</div>
-                      <div className="mt-2 text-xl font-bold text-[#3d2c24]">
-                        中等
-                      </div>
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="text-xs text-[#8c6b5d]">较昨日</span>
-                        <span className="text-xs font-bold text-[#4c8b3e]">
-                          ↑ 5%
+                  {/* Live Pet Monitor */}
+                  <div className="mx-4 mt-4 overflow-hidden rounded-2xl bg-white shadow-soft group cursor-pointer transition-transform hover:scale-[1.02]">
+                    <div className="relative aspect-[16/9]">
+                      <img
+                        src={dogMonitorShot}
+                        alt="智能小宠"
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-md">
+                        <div className="size-1.5 animate-pulse rounded-full bg-[#4c8b3e]" />
+                        <span className="text-[10px] font-bold text-white tracking-wide">
+                          LIVE
                         </span>
+                      </div>
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pb-6 pt-12">
+                        <div className="flex items-end justify-between text-white">
+                          <div>
+                            <div className="text-[10px] font-medium opacity-90 mb-1">
+                              当前状态
+                            </div>
+                            <div className="text-sm font-bold leading-normal">
+                              安静休息中
+                            </div>
+                          </div>
+                          <div className="flex gap-4 text-right">
+                            <div>
+                              <div className="text-[10px] font-medium opacity-90 mb-1">
+                                情绪
+                              </div>
+                              <div className="text-xs font-bold leading-normal">
+                                平稳
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] font-medium opacity-90 mb-1">
+                                活跃度
+                              </div>
+                              <div className="text-xs font-bold leading-normal">
+                                中等
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Recent Alerts */}
-                  <div className="mx-4 mt-4 flex-1 rounded-t-3xl bg-white p-6 shadow-sm">
+                  <div className="mx-4 mt-4 flex-1 rounded-t-3xl bg-white p-6 shadow-soft">
                     <div className="mb-4 text-sm font-bold text-[#3d2c24]">
                       实时监测记录
                     </div>
@@ -392,17 +438,6 @@ export function App() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 size-2 rounded-full bg-[#d8efcf]" />
-                        <div>
-                          <div className="text-sm font-medium text-[#3d2c24]">
-                            情绪识别
-                          </div>
-                          <div className="text-xs text-[#8c6b5d]">
-                            10:15 · 愉悦 · 互动良好
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -414,7 +449,7 @@ export function App() {
 
       <main className="relative z-10" id="main">
         <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-white/60 px-6 py-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm sm:py-14">
+          <div className="rounded-3xl bg-white/60 px-6 py-10 shadow-soft-lg backdrop-blur-sm sm:py-14">
             <div className="mx-auto max-w-3xl text-center">
               <h2 className="text-2xl font-bold text-[#3f261c] sm:text-3xl">
                 专业数据与兽医监制，只为更精准的判断
@@ -460,22 +495,29 @@ export function App() {
             </p>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {painCards.map((card, idx) => (
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {painCards.map((card) => (
               <Card
                 key={card.title}
-                className={`${valueStyles[idx]} py-4 shadow-[0_16px_34px_-30px_rgba(96,58,38,0.55)]`}
+                className={`group relative overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg ${card.bg} ${card.border}`}
               >
-                <CardHeader className="px-5 pb-1">
-                  <CardTitle className="text-xl text-[#4a2d22]">
+                <CardHeader className="relative z-10 px-6 pb-2">
+                  <div
+                    className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${card.iconBg} ${card.color}`}
+                  >
+                    <card.icon className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-xl font-bold text-[#3f261c]">
                     {card.title}
                   </CardTitle>
-                  <CardDescription className="text-[#5c3b2b]">
+                  <CardDescription className="mt-2 text-base text-[#5c3b2b]">
                     {card.detail}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="px-5 pt-2 text-sm leading-6 text-[#3f1d0d]">
-                  {card.action}
+                <CardContent className="relative z-10 px-6 pt-2">
+                  <div className="mt-2 rounded-lg bg-white/50 p-3 text-sm font-medium leading-relaxed text-[#5a3928] backdrop-blur-sm">
+                    {card.action}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -527,7 +569,7 @@ export function App() {
             {screens.map((screen) => (
               <Card
                 key={screen.title}
-                className="overflow-hidden border-[#e8d4c4] bg-white/85 py-4 shadow-[0_18px_40px_-34px_rgba(102,58,38,0.55)]"
+                className="overflow-hidden border-[#e8d4c4] bg-white/85 py-4 shadow-soft-lg"
               >
                 <CardContent className="px-5 pt-1">
                   <img
@@ -655,7 +697,7 @@ export function App() {
           className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8"
           id="cta"
         >
-          <Card className="border-[#f0d0b8] bg-gradient-to-r from-[#fff2e5] via-[#ffe9dc] to-[#eff9eb] py-8 shadow-[0_32px_70px_-45px_rgba(109,67,43,0.6)]">
+          <Card className="border-[#f0d0b8] bg-gradient-to-r from-[#fff2e5] via-[#ffe9dc] to-[#eff9eb] py-8 shadow-soft-lg">
             <CardHeader className="px-6 text-center">
               <CardTitle className="text-3xl leading-tight text-[#43291f] md:text-4xl">
                 让 AI它成为你和宠物之间的健康翻译官
