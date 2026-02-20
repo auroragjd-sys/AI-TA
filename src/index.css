@@ -178,6 +178,21 @@
   }
 }
 
+@keyframes jiggle {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.15) rotate(4deg);
+  }
+  60% {
+    transform: scale(1.15) rotate(-4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
 .animate-blob {
   animation: flow-blob 15s ease-in-out infinite;
 }
@@ -239,6 +254,7 @@
 }
 
 .shared-phone {
+  position: relative;
   overflow: hidden;
   border-radius: 2.6rem;
   border: 8px solid #3d2c24;
@@ -247,7 +263,11 @@
 }
 
 .shared-phone__notch {
-  margin: 8px auto 0;
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
   height: 20px;
   width: 42%;
   border-radius: 999px;

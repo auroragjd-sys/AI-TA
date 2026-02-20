@@ -164,6 +164,8 @@ const endorsements = [
     icon: Hospital,
     color: "text-[var(--med-green-dark)]",
     bgColor: "bg-[#10b981]/10", // var(--med-green)
+    hoverBgColor: "group-hover:bg-[#059669]", // med-green-dark
+    iconHoverColor: "group-hover:text-[#d1fae5]", // light green
   },
   {
     label: "兽医专家顾问团",
@@ -171,6 +173,8 @@ const endorsements = [
     icon: UserRoundCheck,
     color: "text-[var(--tech-blue-dark)]",
     bgColor: "bg-[#0ea5e9]/10", // var(--tech-blue)
+    hoverBgColor: "group-hover:bg-[#0284c7]", // tech-blue-dark
+    iconHoverColor: "group-hover:text-[#e0f2fe]", // light blue
   },
   {
     label: "AI 训练数据集",
@@ -178,6 +182,8 @@ const endorsements = [
     icon: Database,
     color: "text-[var(--tech-blue-dark)]",
     bgColor: "bg-[#0ea5e9]/10", // var(--tech-blue)
+    hoverBgColor: "group-hover:bg-[#0284c7]", // tech-blue-dark
+    iconHoverColor: "group-hover:text-[#e0f2fe]", // light blue
   },
   {
     label: "准确率验证",
@@ -185,6 +191,8 @@ const endorsements = [
     icon: ShieldCheck,
     color: "text-[var(--med-green-dark)]",
     bgColor: "bg-[#10b981]/10", // var(--med-green)
+    hoverBgColor: "group-hover:bg-[#059669]", // med-green-dark
+    iconHoverColor: "group-hover:text-[#d1fae5]", // light green
   },
 ];
 
@@ -205,6 +213,8 @@ type StoryChapter = {
     icon: LucideIcon;
     color: string;
     bgColor: string;
+    hoverBgColor?: string;
+    iconHoverColor?: string;
   }[];
 };
 
@@ -332,22 +342,26 @@ function FullscreenStory({
           </div>
 
           <div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-4">
-            {activeChapter.metrics.map((item) => (
-              <div
-                className="rounded-2xl border border-[#ead8ca] bg-white/80 px-3 py-3 text-center backdrop-blur-sm"
-                key={item.label}
-              >
+            {activeChapter.metrics.map((item) => {
+              const hoverBgColor = item.hoverBgColor || "group-hover:bg-gray-100";
+              const iconHoverColor = item.iconHoverColor || "group-hover:text-white";
+              return (
                 <div
-                  className={`mx-auto mb-2 flex size-10 items-center justify-center rounded-xl ${item.bgColor} ${item.color}`}
+                  className="group rounded-2xl border border-[#ead8ca] bg-white/80 px-3 py-3 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white hover:shadow-soft-lg"
+                  key={item.label}
                 >
-                  <item.icon className="size-5" />
+                  <div
+                    className={`mx-auto mb-2 flex size-10 items-center justify-center rounded-xl transition-all duration-300 ${item.bgColor} ${item.color} ${hoverBgColor} ${iconHoverColor} group-hover:shadow-md`}
+                  >
+                    <item.icon className="size-5 transition-transform duration-500 group-hover:scale-110 group-hover:animate-[jiggle_0.5s_ease-in-out_both]" />
+                  </div>
+                  <div className={`text-xl font-black ${item.color}`}>{item.value}</div>
+                  <div className="mt-1 text-xs font-medium text-[#6d4c34] sm:text-sm">
+                    {item.label}
+                  </div>
                 </div>
-                <div className={`text-xl font-black ${item.color}`}>{item.value}</div>
-                <div className="mt-1 text-xs font-medium text-[#6d4c34] sm:text-sm">
-                  {item.label}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {chapters.length > 1 ? (
@@ -387,7 +401,7 @@ function SharedPhone() {
   return (
     <div className="shared-phone">
       <div className="shared-phone__notch" />
-      <div className="flex h-[600px] flex-col bg-[#fff9f4]">
+      <div className="flex h-full flex-col bg-[#fff9f4] pt-7">
         <div className="flex items-center justify-between px-6 pt-6 pb-2">
           <div>
             <div className="text-xs text-[#8c6b5d]">下午 2:30</div>
@@ -480,6 +494,65 @@ export function App() {
     rotate: 0,
     opacity: 0,
   });
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    let locked = false;
+    let timer = 0;
+    const lockDuration = prefersReducedMotion ? 0 : 720;
+
+    const snapTo = (top: number) => {
+      locked = true;
+      window.scrollTo({
+        top,
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+      });
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        locked = false;
+      }, lockDuration);
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      if (locked) {
+        event.preventDefault();
+        return;
+      }
+
+      if (event.deltaY === 0) {
+        return;
+      }
+
+      const proof = document.getElementById("proof");
+      if (!proof) {
+        return;
+      }
+
+      const y = window.scrollY;
+      const proofTop = proof.offsetTop;
+      const betweenTopAndProof = y > 0 && y < proofTop;
+
+      if (event.deltaY > 0 && y < proofTop) {
+        event.preventDefault();
+        snapTo(proofTop);
+        return;
+      }
+
+      if (event.deltaY < 0 && (betweenTopAndProof || y === proofTop)) {
+        event.preventDefault();
+        snapTo(0);
+      }
+    };
+
+    window.addEventListener("wheel", onWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     let frame = 0;
@@ -1009,10 +1082,75 @@ export function App() {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-[#edd8cb] px-4 py-6 text-center text-sm text-[#6a4532] sm:px-6 lg:px-8">
-        <div className="flex items-center justify-center gap-2">
-          <PawPrint className="size-4 text-[#ff8b59]" />
-          <span>AI它 · 智能宠物呵护助手</span>
+      <footer className="relative z-10 border-t border-[#e9d7ca] bg-white/72 backdrop-blur-sm">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid gap-10 border-b border-[#efdfd3] pb-8 md:grid-cols-[1.25fr_1fr_1fr]">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-[#ff9362] to-[#ff7a45] text-white shadow-sm">
+                  <PawPrint className="size-5" />
+                </span>
+                <span className="text-lg font-black tracking-wide text-[#43291f]">AI它</span>
+              </div>
+              <p className="max-w-md text-sm leading-6 text-[#5a3928]">
+                为宠物家庭提供多模态健康监测、风险预警与就医协同服务，帮助用户在关键时刻做出更稳妥的照护决策。
+              </p>
+              <p className="text-xs leading-5 text-[#7b5a48]">
+                温馨提示：平台建议仅用于辅助判断，不替代专业兽医的线下诊疗意见。
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold tracking-[0.08em] text-[#7b4a2a] uppercase">
+                产品导航
+              </h3>
+              <div className="mt-4 space-y-2 text-sm text-[#5d3d2d]">
+                <a href="#value" className="block transition-colors hover:text-[#3f261c]">
+                  价值主张
+                </a>
+                <a href="#features" className="block transition-colors hover:text-[#3f261c]">
+                  核心功能
+                </a>
+                <a href="#scenes" className="block transition-colors hover:text-[#3f261c]">
+                  场景展示
+                </a>
+                <a href="#audience" className="block transition-colors hover:text-[#3f261c]">
+                  适配人群
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold tracking-[0.08em] text-[#7b4a2a] uppercase">
+                商务与支持
+              </h3>
+              <div className="mt-4 space-y-2 text-sm text-[#5d3d2d]">
+                <p>邮箱：hello@aita.app</p>
+                <p>服务时间：工作日 09:00 - 18:00</p>
+                <a
+                  href="#cta"
+                  className="inline-flex items-center rounded-full border border-[#e4c9b5] bg-white px-4 py-1.5 font-semibold text-[#6a4532] transition-colors hover:bg-[#fff3e8]"
+                >
+                  申请产品内测
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-3 text-xs text-[#7b5a48] sm:flex-row sm:items-center sm:justify-between">
+            <p>© {new Date().getFullYear()} AI它 (AI TA) · All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <a href="#top" className="transition-colors hover:text-[#4a2c1f]">
+                返回顶部
+              </a>
+              <a
+                href="mailto:hello@aita.app"
+                className="transition-colors hover:text-[#4a2c1f]"
+              >
+                联系邮箱
+              </a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
