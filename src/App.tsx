@@ -1,10 +1,3 @@
-import {
-  type CSSProperties,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,8 +13,8 @@ import {
   Activity,
   AlertCircle,
   Cat,
-  ChevronsDown,
   CheckCircle2,
+  ChevronsDown,
   Database,
   Dog,
   Hospital,
@@ -37,6 +30,13 @@ import {
   UserRoundCheck,
   type LucideIcon,
 } from "lucide-react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import "./index.css";
 
 import dogMonitorShot from "./assets/images/dog-monitor.jpg";
@@ -266,6 +266,17 @@ function FullscreenStory({
         return;
       }
       const next = Math.min(1, Math.max(0, -rect.top / travel));
+      // 当超过 Proof 区域后，让 entryRef 迅速归零，使手机消失
+      if (rect.top < -travel) {
+        setProgress(0);
+        if (entryRef.current !== 0) {
+          entryRef.current = 0;
+          setEntryProgress(0);
+          onEntryProgressChange?.(0);
+        }
+        return;
+      }
+      
       setProgress((prev) => (Math.abs(prev - next) < 0.001 ? prev : next));
       if (Math.abs(entryRef.current - entry) >= 0.001) {
         entryRef.current = entry;
@@ -298,7 +309,10 @@ function FullscreenStory({
     if (!chapters.length) {
       return 0;
     }
-    return Math.min(chapters.length - 1, Math.floor(progress * chapters.length));
+    return Math.min(
+      chapters.length - 1,
+      Math.floor(progress * chapters.length),
+    );
   }, [chapters.length, progress]);
 
   const activeChapter = chapters[activeIndex];
@@ -322,7 +336,7 @@ function FullscreenStory({
           <p className="text-sm font-semibold tracking-[0.12em] text-[#9c5f3f] uppercase">
             {activeChapter.phase}
           </p>
-          <h2 className="mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
+          <h2 className="font-rounded-chinese mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
             {activeChapter.title}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#593828]">
@@ -343,8 +357,10 @@ function FullscreenStory({
 
           <div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-4">
             {activeChapter.metrics.map((item) => {
-              const hoverBgColor = item.hoverBgColor || "group-hover:bg-gray-100";
-              const iconHoverColor = item.iconHoverColor || "group-hover:text-white";
+              const hoverBgColor =
+                item.hoverBgColor || "group-hover:bg-gray-100";
+              const iconHoverColor =
+                item.iconHoverColor || "group-hover:text-white";
               return (
                 <div
                   className="group rounded-2xl border border-[#ead8ca] bg-white/80 px-3 py-3 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white hover:shadow-soft-lg"
@@ -355,7 +371,9 @@ function FullscreenStory({
                   >
                     <item.icon className="size-5 transition-transform duration-500 group-hover:scale-110 group-hover:animate-[jiggle_0.5s_ease-in-out_both]" />
                   </div>
-                  <div className={`text-xl font-black ${item.color}`}>{item.value}</div>
+                  <div className={`text-xl font-black ${item.color}`}>
+                    {item.value}
+                  </div>
                   <div className="mt-1 text-xs font-medium text-[#6d4c34] sm:text-sm">
                     {item.label}
                   </div>
@@ -379,7 +397,6 @@ function FullscreenStory({
             </div>
           ) : null}
         </div>
-
       </div>
     </section>
   );
@@ -435,17 +452,25 @@ function SharedPhone() {
             />
             <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-md">
               <div className="size-1.5 animate-pulse rounded-full bg-[#4c8b3e]" />
-              <span className="text-[10px] font-bold tracking-wide text-white">LIVE</span>
+              <span className="text-[10px] font-bold tracking-wide text-white">
+                LIVE
+              </span>
             </div>
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pb-6 pt-12">
               <div className="flex items-end justify-between text-white">
                 <div>
-                  <div className="mb-1 text-[10px] font-medium opacity-90">当前状态</div>
-                  <div className="text-sm font-bold leading-normal">安静休息中</div>
+                  <div className="mb-1 text-[10px] font-medium opacity-90">
+                    当前状态
+                  </div>
+                  <div className="text-sm font-bold leading-normal">
+                    安静休息中
+                  </div>
                 </div>
                 <div className="flex gap-4 text-right">
                   <div>
-                    <div className="mb-1 text-[10px] font-medium opacity-90">情绪</div>
+                    <div className="mb-1 text-[10px] font-medium opacity-90">
+                      情绪
+                    </div>
                     <div className="text-xs font-bold leading-normal">平稳</div>
                   </div>
                   <div>
@@ -461,20 +486,30 @@ function SharedPhone() {
         </div>
 
         <div className="mx-4 mt-4 flex-1 rounded-t-3xl bg-white p-6 shadow-soft">
-          <div className="mb-4 text-sm font-bold text-[#3d2c24]">实时监测记录</div>
+          <div className="mb-4 text-sm font-bold text-[#3d2c24]">
+            实时监测记录
+          </div>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               <div className="mt-1 size-2 rounded-full bg-[#ff9362]" />
               <div>
-                <div className="text-sm font-medium text-[#3d2c24]">检测到异常叫声</div>
-                <div className="text-xs text-[#8c6b5d]">14:20 · 持续 15秒 · 建议关注</div>
+                <div className="text-sm font-medium text-[#3d2c24]">
+                  检测到异常叫声
+                </div>
+                <div className="text-xs text-[#8c6b5d]">
+                  14:20 · 持续 15秒 · 建议关注
+                </div>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <div className="mt-1 size-2 rounded-full bg-[#d8efcf]" />
               <div>
-                <div className="text-sm font-medium text-[#3d2c24]">进食记录</div>
-                <div className="text-xs text-[#8c6b5d]">12:30 · 摄入 45g · 正常</div>
+                <div className="text-sm font-medium text-[#3d2c24]">
+                  进食记录
+                </div>
+                <div className="text-xs text-[#8c6b5d]">
+                  12:30 · 摄入 45g · 正常
+                </div>
               </div>
             </div>
           </div>
@@ -566,7 +601,11 @@ export function App() {
 
       const t = Math.min(1, Math.max(0, storyEntry));
       const widthRatio =
-        window.innerWidth <= 640 ? 0.84 : window.innerWidth <= 1024 ? 0.76 : 0.72;
+        window.innerWidth <= 640
+          ? 0.84
+          : window.innerWidth <= 1024
+            ? 0.76
+            : 0.72;
       const bottomGap = window.innerWidth <= 640 ? 16 : 24;
       const maxWidthByHeight = Math.max(
         0,
@@ -578,9 +617,7 @@ export function App() {
       );
       const targetHeight = (targetWidth * 844) / 390;
       const targetX = (window.innerWidth - targetWidth) / 2;
-      const visibleRatio =
-        window.innerWidth <= 640 ? 0.82 : window.innerWidth <= 1024 ? 0.72 : 0.66;
-      const targetY = window.innerHeight - targetHeight * visibleRatio;
+      const targetY = window.innerHeight * 0.55;
 
       const x = lerp(heroRect.left, targetX, t);
       const y = lerp(heroRect.top, targetY, t);
@@ -660,7 +697,9 @@ export function App() {
         }}
       >
         <div
-          className={storyEntry < 0.02 ? "animate-[float_6s_ease-in-out_infinite]" : ""}
+          className={
+            storyEntry < 0.02 ? "animate-[float_6s_ease-in-out_infinite]" : ""
+          }
         >
           <SharedPhone />
         </div>
@@ -782,7 +821,6 @@ export function App() {
                   </span>
                 </div>
               </div>
-
             </div>
 
             <div
@@ -827,7 +865,7 @@ export function App() {
             <p className="text-sm font-semibold tracking-[0.12em] text-[#9c5f3f] uppercase">
               价值主张
             </p>
-            <h2 className="mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
+            <h2 className="font-rounded-chinese mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
               从盲目担心到有依据地照护
             </h2>
             <p className="mt-4 text-base leading-7 text-[#593828]">
@@ -847,7 +885,7 @@ export function App() {
                   >
                     <card.icon className="h-6 w-6" />
                   </div>
-                  <CardTitle className="text-xl font-bold text-[#3f261c]">
+                  <CardTitle className="font-rounded-chinese text-xl font-bold text-[#3f261c]">
                     {card.title}
                   </CardTitle>
                   <CardDescription className="mt-2 text-base text-[#5c3b2b]">
@@ -872,7 +910,7 @@ export function App() {
             <p className="text-sm font-semibold tracking-[0.12em] text-[#9c5f3f] uppercase">
               核心功能
             </p>
-            <h2 className="mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
+            <h2 className="font-rounded-chinese mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
               AI 能力藏在温和、顺手的日常体验里
             </h2>
             <p className="mt-4 text-base leading-7 text-[#593828]">
@@ -882,7 +920,7 @@ export function App() {
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((item) => (
-              <Card key={item} className="border-[#ead6c5] bg-white/80 py-2">
+              <Card key={item} className="border-[#ebd8ca] bg-white/90 py-2 shadow-soft transition-all hover:shadow-soft-lg">
                 <CardContent className="flex items-center gap-2 px-4 py-3 text-sm font-semibold tracking-wide text-[#442113]">
                   <CheckCircle2 className="size-4 text-[#ff8b59]" />
                   {item}
@@ -900,7 +938,7 @@ export function App() {
             <p className="text-sm font-semibold tracking-[0.12em] text-[#9c5f3f] uppercase">
               场景展示
             </p>
-            <h2 className="mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
+            <h2 className="font-rounded-chinese mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
               三屏看懂 AI它 的核心产品体验
             </h2>
           </div>
@@ -909,7 +947,7 @@ export function App() {
             {screens.map((screen) => (
               <Card
                 key={screen.title}
-                className="overflow-hidden border-[#e8d4c4] bg-white/85 py-4 shadow-soft-lg"
+                className="overflow-hidden border-[#ebd8ca] bg-white/90 py-4 shadow-soft-lg transition-transform hover:-translate-y-1"
               >
                 <CardContent className="px-5 pt-1">
                   <img
@@ -922,7 +960,7 @@ export function App() {
                   />
                 </CardContent>
                 <CardHeader className="px-5 pt-0">
-                  <CardTitle className="text-xl text-[#4b2f23]">
+                  <CardTitle className="font-rounded-chinese text-xl text-[#4b2f23]">
                     {screen.title}
                   </CardTitle>
                   <CardDescription className="text-[#5b3b2b]">
@@ -939,40 +977,57 @@ export function App() {
           aria-label="疾病追踪闭环"
         >
           <div className="grid gap-6 lg:grid-cols-[1fr_0.95fr]">
-            <Card className="border-[#d9e8cf] bg-[#f5fbee] py-5 text-[#4b3126]">
-              <CardHeader className="px-6 pb-2">
-                <p className="text-sm font-semibold tracking-[0.12em] text-[var(--med-green-dark)] uppercase">
-                  疾病追踪
-                </p>
-                <CardTitle className="text-3xl leading-tight">
-                  症状追踪 + 健康管理，构建可追溯闭环
+            <Card className="border-[#ebd8ca] bg-gradient-to-br from-[#fffcf9] to-[#fff6f0] py-8 shadow-soft-lg text-[#4b3126]">
+              <CardHeader className="px-6 pb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex size-8 items-center justify-center rounded-lg bg-[#e0f2fe] text-[#0284c7]">
+                    <Stethoscope className="size-5" />
+                  </span>
+                  <p className="text-sm font-bold tracking-[0.08em] text-[#0284c7] uppercase">
+                    疾病追踪
+                  </p>
+                </div>
+                <CardTitle className="font-rounded-chinese text-3xl leading-tight text-[#3f261c]">
+                  症状追踪 + 健康管理
+                  <br />
+                  <span className="text-2xl text-[#7b5a48] opacity-90">构建可追溯闭环</span>
                 </CardTitle>
-                <CardDescription className="text-[#4e3a2d]">
+                <CardDescription className="mt-3 text-base leading-relaxed text-[#5d3d2d]">
                   持续监测行为变化，融合体温、心率、饮食排便与病历信息，形成多维交叉分析和持续提醒。
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="grid gap-3 px-6 pt-2">
-                {loop.map((item) => (
-                  <Card
-                    key={item.step}
-                    className="border-[#d8e7d3] bg-white/80 py-4"
-                  >
-                    <CardHeader className="px-4 pb-2">
-                      <CardTitle className="text-lg text-[#4c3126]">
-                        {item.step}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-4 pt-0 text-sm leading-6 text-[#4f3a2c]">
-                      {item.detail}
-                    </CardContent>
-                  </Card>
+              <CardContent className="grid gap-4 px-6 pt-2">
+                {loop.map((item, index) => (
+                  <div key={item.step} className="relative">
+                    {/* Timeline line */}
+                    {index !== loop.length - 1 && (
+                      <div className="absolute left-[11px] top-8 h-full w-0.5 bg-[#e5e7eb]" />
+                    )}
+                    
+                    <div className="flex items-start gap-4">
+                      <div className="relative z-10 mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-[#e0f2fe] ring-4 ring-white">
+                        <div className="size-2 rounded-full bg-[#0ea5e9]" />
+                      </div>
+                      
+                      <div className="flex-1 rounded-xl border border-[#ebd8ca] bg-white/60 px-4 py-3 shadow-sm transition-all hover:bg-white hover:shadow-md">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-rounded-chinese text-lg font-bold text-[#3f261c]">
+                            {item.step}
+                          </h4>
+                        </div>
+                        <p className="mt-1 text-sm leading-6 text-[#6b4a36]">
+                          {item.detail}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </CardContent>
             </Card>
 
             <div className="grid gap-4">
-              <Card className="overflow-hidden border-[#e8d5c5] bg-white/85 py-4">
+              <Card className="overflow-hidden border-[#ebd8ca] bg-white/90 py-4 shadow-soft-lg transition-transform hover:-translate-y-1">
                 <CardContent className="px-4 py-2">
                   <img
                     src={traceShotA}
@@ -984,7 +1039,7 @@ export function App() {
                   />
                 </CardContent>
               </Card>
-              <Card className="overflow-hidden border-[#e8d5c5] bg-white/85 py-4">
+              <Card className="overflow-hidden border-[#ebd8ca] bg-white/90 py-4 shadow-soft-lg transition-transform hover:-translate-y-1">
                 <CardContent className="px-4 py-2">
                   <img
                     src={traceShotB}
@@ -1008,16 +1063,16 @@ export function App() {
             <p className="text-sm font-semibold tracking-[0.12em] text-[#9c5f3f] uppercase">
               适配人群
             </p>
-            <h2 className="mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
+            <h2 className="font-rounded-chinese mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
               不同养宠阶段，都能获得匹配支持
             </h2>
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {personas.map((persona, idx) => (
-              <Card key={persona.name} className={`${personaStyles[idx]} py-4`}>
+              <Card key={persona.name} className={`${personaStyles[idx]} py-4 shadow-sm hover:shadow-soft-lg transition-all duration-300`}>
                 <CardHeader className="px-5">
-                  <CardTitle className="text-[#472c20]">
+                  <CardTitle className="font-rounded-chinese text-[#472c20]">
                     {persona.name}
                   </CardTitle>
                   <CardDescription className="text-[#5d3d2c]">
@@ -1037,25 +1092,25 @@ export function App() {
           className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8"
           id="cta"
         >
-          <Card className="border-[#f0d0b8] bg-gradient-to-r from-[#fff2e5] via-[#ffe9dc] to-[#eff9eb] py-8 shadow-soft-lg">
+          <Card className="border-[#f0d0b8] bg-gradient-to-br from-[#fffbf7] via-[#fff4eb] to-[#ffe8d6] py-12 shadow-soft-xl">
             <CardHeader className="px-6 text-center">
-              <CardTitle className="text-3xl leading-tight text-[#43291f] md:text-4xl">
+              <CardTitle className="font-rounded-chinese text-3xl leading-tight text-[#3f261c] md:text-4xl">
                 让 AI它成为你和宠物之间的健康翻译官
               </CardTitle>
-              <CardDescription className="mx-auto max-w-2xl text-base text-[#4f3427]">
+              <CardDescription className="mx-auto mt-2 max-w-2xl text-lg text-[#5d4037]">
                 现在预约，优先获取首批内测资格、产品白皮书与商务接入方案。
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="mx-auto w-full max-w-2xl px-6 pt-4">
+            <CardContent className="mx-auto w-full max-w-xl px-6 pt-6">
               <form
                 action="mailto:hello@aita.app"
                 method="post"
                 encType="text/plain"
-                className="grid gap-3 sm:grid-cols-[1fr_auto]"
+                className="flex flex-col gap-4 sm:flex-row sm:items-end"
               >
-                <div className="space-y-2 text-left">
-                  <Label htmlFor="contact" className="text-[#3d201f]">
+                <div className="flex-1 space-y-2 text-left">
+                  <Label htmlFor="contact" className="text-base font-medium text-[#4a2e24]">
                     联系邮箱
                   </Label>
                   <Input
@@ -1065,16 +1120,17 @@ export function App() {
                     autoComplete="email"
                     spellCheck={false}
                     required
-                    placeholder="name@example.com…"
-                    className="h-11 border-[#e8c8b1] bg-white/90 text-[#4d3125] placeholder:text-[#806a54]"
+                    placeholder="name@example.com"
+                    className="h-12 rounded-full border-[#e6ccb3] bg-white px-6 text-base text-[#4d3125] placeholder:text-[#9ca3af] focus-visible:ring-[#ff8b59]"
                   />
                 </div>
                 <Button
                   type="submit"
-                  className="h-11 self-end rounded-full bg-[#ff8b59] px-6 text-white hover:bg-[#f37543]"
+                  size="lg"
+                  className="h-12 shrink-0 rounded-full bg-[#ff8b59] px-8 text-base font-semibold text-white shadow-lg shadow-orange-200 transition-transform hover:bg-[#f37543] hover:shadow-orange-300 active:scale-95"
                 >
-                  <Send className="mr-2 size-4" />
-                  获取商务与试用方案
+                  <Send className="mr-2 size-5" />
+                  获取方案
                 </Button>
               </form>
             </CardContent>
@@ -1090,7 +1146,9 @@ export function App() {
                 <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-[#ff9362] to-[#ff7a45] text-white shadow-sm">
                   <PawPrint className="size-5" />
                 </span>
-                <span className="text-lg font-black tracking-wide text-[#43291f]">AI它</span>
+                <span className="text-lg font-black tracking-wide text-[#43291f]">
+                  AI它
+                </span>
               </div>
               <p className="max-w-md text-sm leading-6 text-[#5a3928]">
                 为宠物家庭提供多模态健康监测、风险预警与就医协同服务，帮助用户在关键时刻做出更稳妥的照护决策。
@@ -1101,27 +1159,39 @@ export function App() {
             </div>
 
             <div>
-              <h3 className="text-sm font-bold tracking-[0.08em] text-[#7b4a2a] uppercase">
+              <h3 className="font-rounded-chinese text-sm font-bold tracking-[0.08em] text-[#7b4a2a] uppercase">
                 产品导航
               </h3>
               <div className="mt-4 space-y-2 text-sm text-[#5d3d2d]">
-                <a href="#value" className="block transition-colors hover:text-[#3f261c]">
+                <a
+                  href="#value"
+                  className="block transition-colors hover:text-[#3f261c]"
+                >
                   价值主张
                 </a>
-                <a href="#features" className="block transition-colors hover:text-[#3f261c]">
+                <a
+                  href="#features"
+                  className="block transition-colors hover:text-[#3f261c]"
+                >
                   核心功能
                 </a>
-                <a href="#scenes" className="block transition-colors hover:text-[#3f261c]">
+                <a
+                  href="#scenes"
+                  className="block transition-colors hover:text-[#3f261c]"
+                >
                   场景展示
                 </a>
-                <a href="#audience" className="block transition-colors hover:text-[#3f261c]">
+                <a
+                  href="#audience"
+                  className="block transition-colors hover:text-[#3f261c]"
+                >
                   适配人群
                 </a>
               </div>
             </div>
 
             <div>
-              <h3 className="text-sm font-bold tracking-[0.08em] text-[#7b4a2a] uppercase">
+              <h3 className="font-rounded-chinese text-sm font-bold tracking-[0.08em] text-[#7b4a2a] uppercase">
                 商务与支持
               </h3>
               <div className="mt-4 space-y-2 text-sm text-[#5d3d2d]">
@@ -1129,7 +1199,7 @@ export function App() {
                 <p>服务时间：工作日 09:00 - 18:00</p>
                 <a
                   href="#cta"
-                  className="inline-flex items-center rounded-full border border-[#e4c9b5] bg-white px-4 py-1.5 font-semibold text-[#6a4532] transition-colors hover:bg-[#fff3e8]"
+                  className="inline-flex items-center rounded-full border border-[#e6ccb3] bg-white px-4 py-1.5 font-semibold text-[#6a4532] shadow-sm transition-colors hover:bg-[#fff3e8] hover:shadow-md"
                 >
                   申请产品内测
                 </a>
@@ -1138,7 +1208,9 @@ export function App() {
           </div>
 
           <div className="mt-5 flex flex-col gap-3 text-xs text-[#7b5a48] sm:flex-row sm:items-center sm:justify-between">
-            <p>© {new Date().getFullYear()} AI它 (AI TA) · All rights reserved.</p>
+            <p>
+              © {new Date().getFullYear()} AI它 (AI TA) · All rights reserved.
+            </p>
             <div className="flex items-center gap-4">
               <a href="#top" className="transition-colors hover:text-[#4a2c1f]">
                 返回顶部
