@@ -266,17 +266,7 @@ function FullscreenStory({
         return;
       }
       const next = Math.min(1, Math.max(0, -rect.top / travel));
-      // 当超过 Proof 区域后，让 entryRef 迅速归零，使手机消失
-      if (rect.top < -travel) {
-        setProgress(0);
-        if (entryRef.current !== 0) {
-          entryRef.current = 0;
-          setEntryProgress(0);
-          onEntryProgressChange?.(0);
-        }
-        return;
-      }
-      
+
       setProgress((prev) => (Math.abs(prev - next) < 0.001 ? prev : next));
       if (Math.abs(entryRef.current - entry) >= 0.001) {
         entryRef.current = entry;
@@ -326,7 +316,7 @@ function FullscreenStory({
 
   return (
     <section
-      className="fullscreen-story"
+      className="fullscreen-story snap-start snap-always"
       id="proof"
       aria-label="章节全屏过渡动画"
       ref={sectionRef}
@@ -522,6 +512,7 @@ function SharedPhone() {
 export function App() {
   const [storyEntry, setStoryEntry] = useState(0);
   const heroPhoneAnchorRef = useRef<HTMLDivElement>(null);
+  const valuePhoneAnchorRef = useRef<HTMLDivElement>(null);
   const [phonePose, setPhonePose] = useState<PhonePose>({
     x: 0,
     y: 0,
@@ -531,61 +522,14 @@ export function App() {
   });
 
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    let locked = false;
-    let timer = 0;
-    const lockDuration = prefersReducedMotion ? 0 : 720;
-
-    const snapTo = (top: number) => {
-      locked = true;
-      window.scrollTo({
-        top,
-        behavior: prefersReducedMotion ? "auto" : "smooth",
-      });
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        locked = false;
-      }, lockDuration);
-    };
-
-    const onWheel = (event: WheelEvent) => {
-      if (locked) {
-        event.preventDefault();
-        return;
-      }
-
-      if (event.deltaY === 0) {
-        return;
-      }
-
-      const proof = document.getElementById("proof");
-      if (!proof) {
-        return;
-      }
-
-      const y = window.scrollY;
-      const proofTop = proof.offsetTop;
-      const betweenTopAndProof = y > 0 && y < proofTop;
-
-      if (event.deltaY > 0 && y < proofTop) {
-        event.preventDefault();
-        snapTo(proofTop);
-        return;
-      }
-
-      if (event.deltaY < 0 && (betweenTopAndProof || y === proofTop)) {
-        event.preventDefault();
-        snapTo(0);
-      }
-    };
-
-    window.addEventListener("wheel", onWheel, { passive: false });
+    const html = document.documentElement;
+    const body = document.body;
+    html.classList.add("snap-y", "snap-mandatory");
+    body.classList.add("snap-y", "snap-mandatory");
 
     return () => {
-      window.removeEventListener("wheel", onWheel);
-      window.clearTimeout(timer);
+      html.classList.remove("snap-y", "snap-mandatory");
+      body.classList.remove("snap-y", "snap-mandatory");
     };
   }, []);
 
@@ -619,14 +563,36 @@ export function App() {
       const targetX = (window.innerWidth - targetWidth) / 2;
       const targetY = window.innerHeight * 0.55;
 
-      const x = lerp(heroRect.left, targetX, t);
-      const y = lerp(heroRect.top, targetY, t);
-      const width = lerp(heroRect.width, targetWidth, t);
+      let x = lerp(heroRect.left, targetX, t);
+      let y = lerp(heroRect.top, targetY, t);
+      let width = lerp(heroRect.width, targetWidth, t);
       const height = (width * 844) / 390;
-      const rotate = lerp(-4, 0, t);
+      let rotate = lerp(-4, 0, t);
+
+      const valueRect = valuePhoneAnchorRef.current?.getBoundingClientRect();
+      
       const visible =
-        width > 0 && height > 0 && y < window.innerHeight && y + height > 0;
-      const opacity = visible ? 1 : 0;
+        (width > 0 && height > 0 && y < window.innerHeight && y + height > 0) ||
+        (!!valueRect && valueRect.top < window.innerHeight && valueRect.bottom > 0);
+      
+      let opacity = visible ? 1 : 0;
+
+      if (valueRect) {
+        // Calculate transition progress based on value section position
+        // When value section enters from bottom (1.2vh), start transition
+        // When value section reaches near center (0.5vh), complete transition
+        const startY = window.innerHeight * 1.2;
+        const endY = window.innerHeight * 0.5;
+        const progress = Math.max(0, Math.min(1, (startY - valueRect.top) / (startY - endY)));
+        
+        if (progress > 0) {
+          x = lerp(x, valueRect.left, progress);
+          y = lerp(y, valueRect.top, progress);
+          width = lerp(width, valueRect.width, progress);
+          // Keep rotation at 0 for value section
+          rotate = lerp(rotate, 0, progress);
+        }
+      }
 
       setPhonePose((prev) => {
         if (
@@ -706,7 +672,7 @@ export function App() {
       </div>
 
       <header
-        className="relative z-10 flex min-h-screen flex-col justify-center"
+        className="relative z-10 flex min-h-screen snap-start snap-always flex-col justify-center"
         id="top"
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -858,52 +824,66 @@ export function App() {
         />
 
         <section
-          className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8"
+          className="mx-auto min-h-screen max-w-7xl snap-start snap-always px-4 pt-24 pb-12 sm:px-6 lg:box-border lg:flex lg:h-screen lg:flex-col lg:justify-center lg:px-8 lg:py-0"
           id="value"
         >
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold tracking-[0.12em] text-[#9c5f3f] uppercase">
-              价值主张
-            </p>
-            <h2 className="font-rounded-chinese mt-3 text-3xl font-bold text-[#3f261c] md:text-4xl">
-              从盲目担心到有依据地照护
-            </h2>
-            <p className="mt-4 text-base leading-7 text-[#593828]">
-              围绕宠物家庭最常见的三类焦虑，AI它将识别、解释和干预串成一个可执行闭环。
-            </p>
-          </div>
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-center">
+            {/* Phone on the left */}
+            <div className="flex w-full justify-center lg:w-1/3 lg:justify-end">
+              <div 
+                className="w-full max-w-[280px] lg:max-w-[320px]" 
+                style={{ aspectRatio: "390/844" }}
+                ref={valuePhoneAnchorRef}
+              />
+            </div>
 
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {painCards.map((card) => (
-              <Card
-                key={card.title}
-                className={`group relative overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg ${card.bg} ${card.border}`}
-              >
-                <CardHeader className="relative z-10 px-6 pb-2">
-                  <div
-                    className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${card.iconBg} ${card.color}`}
+            {/* Content on the right */}
+            <div className="w-full lg:w-2/3">
+              <div className="max-w-3xl">
+                <p className="text-sm font-semibold tracking-[0.12em] text-[#9c5f3f] uppercase">
+                  价值主张
+                </p>
+                <h2 className="font-rounded-chinese mt-2 text-3xl font-bold text-[#3f261c] md:text-4xl">
+                  从盲目担心到有依据地照护
+                </h2>
+                <p className="mt-3 text-base leading-7 text-[#593828]">
+                  围绕宠物家庭最常见的三类焦虑，AI它将识别、解释和干预串成一个可执行闭环。
+                </p>
+              </div>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {painCards.map((card) => (
+                  <Card
+                    key={card.title}
+                    className={`group relative overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg ${card.bg} ${card.border}`}
                   >
-                    <card.icon className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="font-rounded-chinese text-xl font-bold text-[#3f261c]">
-                    {card.title}
-                  </CardTitle>
-                  <CardDescription className="mt-2 text-base text-[#5c3b2b]">
-                    {card.detail}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="relative z-10 px-6 pt-2">
-                  <div className="mt-2 rounded-lg bg-white/50 p-3 text-sm font-medium leading-relaxed text-[#5a3928] backdrop-blur-sm">
-                    {card.action}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <CardHeader className="relative z-10 px-5 pb-2 pt-5">
+                      <div
+                        className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${card.iconBg} ${card.color}`}
+                      >
+                        <card.icon className="h-5 w-5" />
+                      </div>
+                      <CardTitle className="font-rounded-chinese text-lg font-bold text-[#3f261c]">
+                        {card.title}
+                      </CardTitle>
+                      <CardDescription className="mt-1.5 text-sm text-[#5c3b2b] line-clamp-2">
+                        {card.detail}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="relative z-10 px-5 pb-5 pt-1">
+                      <div className="mt-1 rounded-lg bg-white/50 p-2.5 text-xs font-medium leading-relaxed text-[#5a3928] backdrop-blur-sm">
+                        {card.action}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
         <section
-          className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8"
+          className="mx-auto min-h-screen max-w-6xl snap-start snap-always px-4 py-24 sm:px-6 lg:box-border lg:flex lg:h-screen lg:flex-col lg:justify-center lg:px-8 lg:py-12"
           id="features"
         >
           <div className="max-w-3xl">
@@ -931,7 +911,7 @@ export function App() {
         </section>
 
         <section
-          className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8"
+          className="mx-auto min-h-screen max-w-6xl snap-start snap-always px-4 py-24 sm:px-6 lg:box-border lg:flex lg:h-screen lg:flex-col lg:justify-center lg:px-8 lg:py-12"
           id="scenes"
         >
           <div className="max-w-3xl">
@@ -953,7 +933,7 @@ export function App() {
                   <img
                     src={screen.image}
                     alt={screen.alt}
-                    className="h-[430px] w-full rounded-2xl object-cover"
+                    className="h-[430px] w-full rounded-2xl object-cover lg:h-[320px] xl:h-[430px]"
                     width={390}
                     height={844}
                     loading="lazy"
@@ -973,7 +953,7 @@ export function App() {
         </section>
 
         <section
-          className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8"
+          className="mx-auto min-h-screen max-w-6xl snap-start snap-always px-4 py-24 sm:px-6 lg:box-border lg:flex lg:h-screen lg:flex-col lg:justify-center lg:px-8 lg:py-12"
           aria-label="疾病追踪闭环"
         >
           <div className="grid gap-6 lg:grid-cols-[1fr_0.95fr]">
@@ -1032,7 +1012,7 @@ export function App() {
                   <img
                     src={traceShotA}
                     alt="症状模板化录入界面"
-                    className="h-[360px] w-full rounded-2xl object-cover"
+                    className="h-[360px] w-full rounded-2xl object-cover lg:h-[240px] xl:h-[320px]"
                     width={390}
                     height={844}
                     loading="lazy"
@@ -1044,7 +1024,7 @@ export function App() {
                   <img
                     src={traceShotB}
                     alt="护理记录和报警节点界面"
-                    className="h-[360px] w-full rounded-2xl object-cover"
+                    className="h-[360px] w-full rounded-2xl object-cover lg:h-[240px] xl:h-[320px]"
                     width={390}
                     height={844}
                     loading="lazy"
@@ -1056,7 +1036,7 @@ export function App() {
         </section>
 
         <section
-          className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8"
+          className="mx-auto min-h-screen max-w-6xl snap-start snap-always px-4 py-24 sm:px-6 lg:box-border lg:flex lg:h-screen lg:flex-col lg:justify-center lg:px-8 lg:py-12"
           id="audience"
         >
           <div className="max-w-3xl">
@@ -1089,142 +1069,144 @@ export function App() {
         </section>
 
         <section
-          className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8"
+          className="min-h-screen snap-start snap-always pt-12 pb-0 lg:flex lg:h-screen lg:flex-col lg:justify-between lg:pt-6 lg:pb-0"
           id="cta"
         >
-          <Card className="border-[#f0d0b8] bg-gradient-to-br from-[#fffbf7] via-[#fff4eb] to-[#ffe8d6] py-12 shadow-soft-xl">
-            <CardHeader className="px-6 text-center">
-              <CardTitle className="font-rounded-chinese text-3xl leading-tight text-[#3f261c] md:text-4xl">
-                让 AI它成为你和宠物之间的健康翻译官
-              </CardTitle>
-              <CardDescription className="mx-auto mt-2 max-w-2xl text-lg text-[#5d4037]">
-                现在预约，优先获取首批内测资格、产品白皮书与商务接入方案。
-              </CardDescription>
-            </CardHeader>
+          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:flex lg:flex-1 lg:items-center lg:px-8">
+            <Card className="w-full border-[#f0d0b8] bg-gradient-to-br from-[#fffbf7] via-[#fff4eb] to-[#ffe8d6] py-10 shadow-soft-xl lg:py-8">
+              <CardHeader className="px-6 text-center">
+                <CardTitle className="font-rounded-chinese text-3xl leading-tight text-[#3f261c] md:text-4xl">
+                  让 AI它成为你和宠物之间的健康翻译官
+                </CardTitle>
+                <CardDescription className="mx-auto mt-2 max-w-2xl text-lg text-[#5d4037]">
+                  现在预约，优先获取首批内测资格、产品白皮书与商务接入方案。
+                </CardDescription>
+              </CardHeader>
 
-            <CardContent className="mx-auto w-full max-w-xl px-6 pt-6">
-              <form
-                action="mailto:hello@aita.app"
-                method="post"
-                encType="text/plain"
-                className="flex flex-col gap-4 sm:flex-row sm:items-end"
-              >
-                <div className="flex-1 space-y-2 text-left">
-                  <Label htmlFor="contact" className="text-base font-medium text-[#4a2e24]">
-                    联系邮箱
-                  </Label>
-                  <Input
-                    id="contact"
-                    name="邮箱"
-                    type="email"
-                    autoComplete="email"
-                    spellCheck={false}
-                    required
-                    placeholder="name@example.com"
-                    className="h-12 rounded-full border-[#e6ccb3] bg-white px-6 text-base text-[#4d3125] placeholder:text-[#9ca3af] focus-visible:ring-[#ff8b59]"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="h-12 shrink-0 rounded-full bg-[#ff8b59] px-8 text-base font-semibold text-white shadow-lg shadow-orange-200 transition-transform hover:bg-[#f37543] hover:shadow-orange-300 active:scale-95"
+              <CardContent className="mx-auto w-full max-w-xl px-6 pt-6">
+                <form
+                  action="mailto:hello@aita.app"
+                  method="post"
+                  encType="text/plain"
+                  className="flex flex-col gap-4 sm:flex-row sm:items-end"
                 >
-                  <Send className="mr-2 size-5" />
-                  获取方案
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+                  <div className="flex-1 space-y-2 text-left">
+                    <Label htmlFor="contact" className="text-base font-medium text-[#4a2e24]">
+                      联系邮箱
+                    </Label>
+                    <Input
+                      id="contact"
+                      name="邮箱"
+                      type="email"
+                      autoComplete="email"
+                      spellCheck={false}
+                      required
+                      placeholder="name@example.com"
+                      className="h-12 rounded-full border-[#e6ccb3] bg-white px-6 text-base text-[#4d3125] placeholder:text-[#9ca3af] focus-visible:ring-[#ff8b59]"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="h-12 shrink-0 rounded-full bg-[#ff8b59] px-8 text-base font-semibold text-white shadow-lg shadow-orange-200 transition-transform hover:bg-[#f37543] hover:shadow-orange-300 active:scale-95"
+                  >
+                    <Send className="mr-2 size-5" />
+                    获取方案
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+
+          <footer className="relative z-10 mt-6 border-t border-[#e9d7ca] bg-white/72 backdrop-blur-sm lg:mt-4">
+            <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-4">
+              <div className="grid gap-6 border-b border-[#efdfd3] pb-4 md:grid-cols-[1.25fr_1fr_1fr]">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-[#ff9362] to-[#ff7a45] text-white shadow-sm">
+                      <PawPrint className="size-5" />
+                    </span>
+                    <span className="text-lg font-black tracking-wide text-[#43291f]">
+                      AI它
+                    </span>
+                  </div>
+                  <p className="max-w-md text-sm leading-6 text-[#5a3928]">
+                    为宠物家庭提供多模态健康监测、风险预警与就医协同服务，帮助用户在关键时刻做出更稳妥的照护决策。
+                  </p>
+                  <p className="text-xs leading-5 text-[#7b5a48]">
+                    温馨提示：平台建议仅用于辅助判断，不替代专业兽医的线下诊疗意见。
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-rounded-chinese text-sm font-bold tracking-[0.08em] text-[#7b4a2a] uppercase">
+                    产品导航
+                  </h3>
+                  <div className="mt-4 space-y-2 text-sm text-[#5d3d2d]">
+                    <a
+                      href="#value"
+                      className="block transition-colors hover:text-[#3f261c]"
+                    >
+                      价值主张
+                    </a>
+                    <a
+                      href="#features"
+                      className="block transition-colors hover:text-[#3f261c]"
+                    >
+                      核心功能
+                    </a>
+                    <a
+                      href="#scenes"
+                      className="block transition-colors hover:text-[#3f261c]"
+                    >
+                      场景展示
+                    </a>
+                    <a
+                      href="#audience"
+                      className="block transition-colors hover:text-[#3f261c]"
+                    >
+                      适配人群
+                    </a>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-rounded-chinese text-sm font-bold tracking-[0.08em] text-[#7b4a2a] uppercase">
+                    商务与支持
+                  </h3>
+                  <div className="mt-4 space-y-2 text-sm text-[#5d3d2d]">
+                    <p>邮箱：hello@aita.app</p>
+                    <p>服务时间：工作日 09:00 - 18:00</p>
+                    <a
+                      href="#cta"
+                      className="inline-flex items-center rounded-full border border-[#e6ccb3] bg-white px-4 py-1.5 font-semibold text-[#6a4532] shadow-sm transition-colors hover:bg-[#fff3e8] hover:shadow-md"
+                    >
+                      申请产品内测
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-col gap-3 text-xs text-[#7b5a48] sm:flex-row sm:items-center sm:justify-between">
+                <p>
+                  © {new Date().getFullYear()} AI它 (AI TA) · All rights reserved.
+                </p>
+                <div className="flex items-center gap-4">
+                  <a href="#top" className="transition-colors hover:text-[#4a2c1f]">
+                    返回顶部
+                  </a>
+                  <a
+                    href="mailto:hello@aita.app"
+                    className="transition-colors hover:text-[#4a2c1f]"
+                  >
+                    联系邮箱
+                  </a>
+                </div>
+              </div>
+            </div>
+          </footer>
         </section>
       </main>
-
-      <footer className="relative z-10 border-t border-[#e9d7ca] bg-white/72 backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid gap-10 border-b border-[#efdfd3] pb-8 md:grid-cols-[1.25fr_1fr_1fr]">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-[#ff9362] to-[#ff7a45] text-white shadow-sm">
-                  <PawPrint className="size-5" />
-                </span>
-                <span className="text-lg font-black tracking-wide text-[#43291f]">
-                  AI它
-                </span>
-              </div>
-              <p className="max-w-md text-sm leading-6 text-[#5a3928]">
-                为宠物家庭提供多模态健康监测、风险预警与就医协同服务，帮助用户在关键时刻做出更稳妥的照护决策。
-              </p>
-              <p className="text-xs leading-5 text-[#7b5a48]">
-                温馨提示：平台建议仅用于辅助判断，不替代专业兽医的线下诊疗意见。
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-rounded-chinese text-sm font-bold tracking-[0.08em] text-[#7b4a2a] uppercase">
-                产品导航
-              </h3>
-              <div className="mt-4 space-y-2 text-sm text-[#5d3d2d]">
-                <a
-                  href="#value"
-                  className="block transition-colors hover:text-[#3f261c]"
-                >
-                  价值主张
-                </a>
-                <a
-                  href="#features"
-                  className="block transition-colors hover:text-[#3f261c]"
-                >
-                  核心功能
-                </a>
-                <a
-                  href="#scenes"
-                  className="block transition-colors hover:text-[#3f261c]"
-                >
-                  场景展示
-                </a>
-                <a
-                  href="#audience"
-                  className="block transition-colors hover:text-[#3f261c]"
-                >
-                  适配人群
-                </a>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-rounded-chinese text-sm font-bold tracking-[0.08em] text-[#7b4a2a] uppercase">
-                商务与支持
-              </h3>
-              <div className="mt-4 space-y-2 text-sm text-[#5d3d2d]">
-                <p>邮箱：hello@aita.app</p>
-                <p>服务时间：工作日 09:00 - 18:00</p>
-                <a
-                  href="#cta"
-                  className="inline-flex items-center rounded-full border border-[#e6ccb3] bg-white px-4 py-1.5 font-semibold text-[#6a4532] shadow-sm transition-colors hover:bg-[#fff3e8] hover:shadow-md"
-                >
-                  申请产品内测
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 flex flex-col gap-3 text-xs text-[#7b5a48] sm:flex-row sm:items-center sm:justify-between">
-            <p>
-              © {new Date().getFullYear()} AI它 (AI TA) · All rights reserved.
-            </p>
-            <div className="flex items-center gap-4">
-              <a href="#top" className="transition-colors hover:text-[#4a2c1f]">
-                返回顶部
-              </a>
-              <a
-                href="mailto:hello@aita.app"
-                className="transition-colors hover:text-[#4a2c1f]"
-              >
-                联系邮箱
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

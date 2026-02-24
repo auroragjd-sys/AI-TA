@@ -284,7 +284,7 @@
 
 .fullscreen-story {
   position: relative;
-  height: 240vh;
+  height: 100vh;
 }
 
 .fullscreen-story__sticky {
@@ -316,17 +316,7 @@
   transition: opacity 220ms linear, transform 260ms ease-out;
 }
 
-@media (max-width: 1024px) {
-  .fullscreen-story {
-    height: 228vh;
-  }
-}
-
 @media (max-width: 640px) {
-  .fullscreen-story {
-    height: 208vh;
-  }
-
   .fullscreen-story__content {
     margin-top: 4.5rem;
   }
