@@ -8,6 +8,11 @@
     --med-green: #10b981;
     --tech-blue-dark: #0284c7;
     --med-green-dark: #059669;
+    --shared-phone-aspect-ratio: 390 / 844;
+    --shared-phone-entry-rotate: -4;
+    --shared-phone-story-visible-height-ratio: 0.5;
+    --shared-phone-hero-width: clamp(15rem, 22vw, 19rem);
+    --shared-phone-value-width: clamp(14rem, 20vw, 17.5rem);
   }
 
   html {
@@ -202,7 +207,13 @@
 }
 
 .hero-phone-anchor {
-  aspect-ratio: 390 / 844;
+  width: min(100%, var(--shared-phone-hero-width));
+  aspect-ratio: var(--shared-phone-aspect-ratio);
+}
+
+.value-phone-anchor {
+  width: min(100%, var(--shared-phone-value-width));
+  aspect-ratio: var(--shared-phone-aspect-ratio);
 }
 
 .hero-scroll-hint {

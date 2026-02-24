@@ -404,6 +404,82 @@ function lerp(from: number, to: number, t: number) {
   return from + (to - from) * t;
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+type LayoutRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+function rectFromDomRect(rect: DOMRect): LayoutRect {
+  return {
+    x: rect.left,
+    y: rect.top,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+function lowerCenterRect(
+  rect: LayoutRect,
+  visibleHeightRatio: number,
+): LayoutRect {
+  const ratio = clamp(visibleHeightRatio, 0, 1);
+  const visibleHeight = rect.height * ratio;
+
+  return {
+    x: (window.innerWidth - rect.width) / 2,
+    y: window.innerHeight - visibleHeight,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+function readCssNumber(name: string) {
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  const value = Number.parseFloat(raw);
+
+  return Number.isFinite(value) ? value : 0;
+}
+
+function valueTransitionProgress(rect: LayoutRect) {
+  const startTop = window.innerHeight;
+  const endTop = (window.innerHeight - rect.height) / 2;
+
+  if (startTop === endTop) {
+    return rect.y <= endTop ? 1 : 0;
+  }
+
+  return clamp((startTop - rect.y) / (startTop - endTop), 0, 1);
+}
+
+function fitRectToViewport(
+  rect: LayoutRect,
+  minVisibleHeightRatio: number,
+): LayoutRect {
+  const widthScale = rect.width > 0 ? window.innerWidth / rect.width : 1;
+  const heightScale = rect.height > 0 ? window.innerHeight / rect.height : 1;
+  const scale = Math.min(1, widthScale, heightScale);
+  const width = rect.width * scale;
+  const height = rect.height * scale;
+  const ratio = clamp(minVisibleHeightRatio, 0, 1);
+  const minVisibleHeight = height * ratio;
+  const x = clamp(rect.x, 0, Math.max(0, window.innerWidth - width));
+  const y = clamp(
+    rect.y,
+    minVisibleHeight - height,
+    window.innerHeight - minVisibleHeight,
+  );
+
+  return { x, y, width, height };
+}
+
 function SharedPhone() {
   return (
     <div className="shared-phone">
@@ -538,61 +614,66 @@ export function App() {
 
     const update = () => {
       frame = 0;
-      const heroRect = heroPhoneAnchorRef.current?.getBoundingClientRect();
-      if (!heroRect) {
+      const heroDomRect = heroPhoneAnchorRef.current?.getBoundingClientRect();
+
+      if (
+        !heroDomRect ||
+        heroDomRect.width <= 0 ||
+        heroDomRect.height <= 0
+      ) {
         return;
       }
 
       const t = Math.min(1, Math.max(0, storyEntry));
-      const widthRatio =
-        window.innerWidth <= 640
-          ? 0.84
-          : window.innerWidth <= 1024
-            ? 0.76
-            : 0.72;
-      const bottomGap = window.innerWidth <= 640 ? 16 : 24;
-      const maxWidthByHeight = Math.max(
+      const heroRect = rectFromDomRect(heroDomRect);
+      const storyVisibleHeightRatio = clamp(
+        readCssNumber("--shared-phone-story-visible-height-ratio"),
         0,
-        ((window.innerHeight - bottomGap * 2) * 390) / 844,
+        1,
       );
-      const targetWidth = Math.max(
-        0,
-        Math.min(360, window.innerWidth * widthRatio, maxWidthByHeight),
-      );
-      const targetHeight = (targetWidth * 844) / 390;
-      const targetX = (window.innerWidth - targetWidth) / 2;
-      const targetY = window.innerHeight * 0.55;
+      const storyRect = lowerCenterRect(heroRect, storyVisibleHeightRatio);
 
-      let x = lerp(heroRect.left, targetX, t);
-      let y = lerp(heroRect.top, targetY, t);
-      let width = lerp(heroRect.width, targetWidth, t);
-      const height = (width * 844) / 390;
-      let rotate = lerp(-4, 0, t);
+      let x = lerp(heroRect.x, storyRect.x, t);
+      let y = lerp(heroRect.y, storyRect.y, t);
+      let width = lerp(heroRect.width, storyRect.width, t);
+      let height = lerp(heroRect.height, storyRect.height, t);
+      let rotate = lerp(readCssNumber("--shared-phone-entry-rotate"), 0, t);
 
-      const valueRect = valuePhoneAnchorRef.current?.getBoundingClientRect();
-      
-      const visible =
-        (width > 0 && height > 0 && y < window.innerHeight && y + height > 0) ||
-        (!!valueRect && valueRect.top < window.innerHeight && valueRect.bottom > 0);
-      
-      let opacity = visible ? 1 : 0;
+      const valueDomRect = valuePhoneAnchorRef.current?.getBoundingClientRect();
+      const valueRect = valueDomRect
+        ? rectFromDomRect(valueDomRect)
+        : undefined;
+
+      let opacity = 0;
 
       if (valueRect) {
-        // Calculate transition progress based on value section position
-        // When value section enters from bottom (1.2vh), start transition
-        // When value section reaches near center (0.5vh), complete transition
-        const startY = window.innerHeight * 1.2;
-        const endY = window.innerHeight * 0.5;
-        const progress = Math.max(0, Math.min(1, (startY - valueRect.top) / (startY - endY)));
-        
+        const progress = valueTransitionProgress(valueRect);
+
         if (progress > 0) {
-          x = lerp(x, valueRect.left, progress);
-          y = lerp(y, valueRect.top, progress);
+          x = lerp(x, valueRect.x, progress);
+          y = lerp(y, valueRect.y, progress);
           width = lerp(width, valueRect.width, progress);
-          // Keep rotation at 0 for value section
+          height = lerp(height, valueRect.height, progress);
           rotate = lerp(rotate, 0, progress);
         }
       }
+
+      ({ x, y, width, height } = fitRectToViewport({
+        x,
+        y,
+        width,
+        height,
+      }, storyVisibleHeightRatio));
+
+      const visible =
+        width > 0 &&
+        height > 0 &&
+        x < window.innerWidth &&
+        x + width > 0 &&
+        y < window.innerHeight &&
+        y + height > 0;
+
+      opacity = visible ? 1 : 0;
 
       setPhonePose((prev) => {
         if (
@@ -790,7 +871,7 @@ export function App() {
             </div>
 
             <div
-              className="hero-phone-anchor mx-auto w-full max-w-[320px] lg:max-w-[360px]"
+              className="hero-phone-anchor mx-auto"
               ref={heroPhoneAnchorRef}
               aria-hidden="true"
             />
@@ -831,8 +912,7 @@ export function App() {
             {/* Phone on the left */}
             <div className="flex w-full justify-center lg:w-1/3 lg:justify-end">
               <div 
-                className="w-full max-w-[280px] lg:max-w-[320px]" 
-                style={{ aspectRatio: "390/844" }}
+                className="value-phone-anchor"
                 ref={valuePhoneAnchorRef}
               />
             </div>
