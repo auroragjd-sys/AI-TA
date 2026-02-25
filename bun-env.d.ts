@@ -30,3 +30,8 @@ declare module "*.jpeg" {
   const path: `${string}.jpeg`;
   export = path;
 }
+
+declare module "*.mp4" {
+  const path: `${string}.mp4`;
+  export = path;
+}

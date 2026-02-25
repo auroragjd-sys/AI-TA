@@ -206,14 +206,91 @@
   animation: flow-blob-reverse 18s ease-in-out infinite;
 }
 
-.hero-phone-anchor {
+.value-phone-anchor {
+  width: min(100%, var(--shared-phone-value-width));
+  aspect-ratio: var(--shared-phone-aspect-ratio);
+}
+
+.hero-phone-anchor,
+.hero-carousel-phone-anchor {
   width: min(100%, var(--shared-phone-hero-width));
   aspect-ratio: var(--shared-phone-aspect-ratio);
 }
 
-.value-phone-anchor {
-  width: min(100%, var(--shared-phone-value-width));
-  aspect-ratio: var(--shared-phone-aspect-ratio);
+@media (min-width: 1024px) {
+  .hero-phone-anchor,
+  .hero-carousel-phone-anchor {
+    min-width: var(--shared-phone-hero-width);
+  }
+}
+
+.hero-copy-carousel__viewport {
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid #ead8ca;
+  background: linear-gradient(150deg, rgb(255 255 255 / 92%), rgb(255 245 236 / 84%));
+  box-shadow: 0 18px 42px -26px rgb(79 47 31 / 34%);
+}
+
+.hero-copy-carousel__track {
+  display: flex;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.hero-copy-carousel__slide {
+  min-width: 100%;
+  min-height: 15rem;
+  padding: 1.5rem;
+}
+
+.hero-copy-carousel__nav-btn {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #e6ccb8;
+  background: rgb(255 255 255 / 84%);
+  color: #7b4a2a;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.hero-copy-carousel__nav-btn:hover {
+  border-color: #e3b28f;
+  background: #fff3e8;
+  color: #6a3f24;
+}
+
+.hero-copy-carousel__nav-btn:active {
+  transform: scale(0.96);
+}
+
+.hero-copy-carousel__dot {
+  display: inline-flex;
+  height: 0.4rem;
+  width: 0.4rem;
+  border-radius: 999px;
+  border: none;
+  transition:
+    width 220ms ease,
+    background-color 180ms ease,
+    opacity 180ms ease;
+}
+
+.hero-copy-carousel__dot--active {
+  width: 1.4rem;
+  background: #ff8b59;
+}
+
+.hero-copy-carousel__dot--idle {
+  opacity: 0.68;
+  background: #e2c8b8;
 }
 
 .hero-scroll-hint {
@@ -291,6 +368,100 @@
   height: auto;
   aspect-ratio: 390 / 844;
   object-fit: cover;
+}
+
+.shared-phone__image-layout {
+  height: 100%;
+  background: #fff;
+}
+
+.shared-phone__image-screen {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.shared-phone__video-layout {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 2.35rem 0.75rem 0.75rem;
+  background:
+    radial-gradient(circle at 18% 12%, rgb(255 220 197 / 36%), transparent 52%),
+    linear-gradient(180deg, #fff8f2 0%, #fff2ea 100%);
+}
+
+.shared-phone__video-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 0.95rem;
+  border: 1px solid rgb(230 203 186 / 92%);
+  background: rgb(255 255 255 / 80%);
+  padding: 0.5rem 0.65rem;
+}
+
+.shared-phone__video-header-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9b6a4e;
+}
+
+.shared-phone__video-header-chip {
+  border-radius: 999px;
+  background: #ffe5d3;
+  padding: 0.22rem 0.58rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #8f4f30;
+}
+
+.shared-phone__video-frame {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 1.45rem;
+  border: 1px solid #e9d7cb;
+  background: #140e0b;
+  box-shadow: 0 18px 30px -22px rgb(49 28 18 / 56%);
+}
+
+.shared-phone__video {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  background: #140e0b;
+}
+
+.shared-phone__video-overlay {
+  position: absolute;
+  right: 0.65rem;
+  top: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 56%);
+  padding: 0.25rem 0.55rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.shared-phone__video-overlay-dot {
+  height: 0.38rem;
+  width: 0.38rem;
+  border-radius: 999px;
+  background: #ff7f50;
+  box-shadow: 0 0 0 3px rgb(255 127 80 / 30%);
 }
 
 .fullscreen-story {

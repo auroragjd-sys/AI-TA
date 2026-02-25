@@ -14,6 +14,8 @@ import {
   AlertCircle,
   Cat,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   ChevronsDown,
   Database,
   Dog,
@@ -36,6 +38,8 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type Dispatch,
+  type SetStateAction,
 } from "react";
 import "./index.css";
 
@@ -45,6 +49,11 @@ import advisorShot from "./assets/images/健康顾问.png";
 import traceShotA from "./assets/images/追踪1.png";
 import traceShotB from "./assets/images/追踪2.png";
 import heroShot from "./assets/images/首页.png";
+import healthAnalysisVideo from "./assets/videos/健康分析.mp4";
+import audioRecognitionVideo from "./assets/videos/录音识别声音.mp4";
+import emotionRecognitionVideo from "./assets/videos/拍照识别情绪.mp4";
+import smartQaVideo from "./assets/videos/智能问答.mp4";
+import behaviorRecognitionVideo from "./assets/videos/视频行为.mp4";
 
 const painCards = [
   {
@@ -83,6 +92,53 @@ const heroTags = [
   { text: "猫咪情绪识别", icon: Cat },
   { text: "狗狗行为预警", icon: Dog },
   { text: "异常叫声提示", icon: Mic },
+];
+
+type HeroCarouselSlide = {
+  phase: string;
+  title: string;
+  description: string;
+  videoSrc: string;
+};
+
+type PhoneScene = "hero" | "chapter1" | "chapter2" | "value";
+
+const heroCarouselSlides: HeroCarouselSlide[] = [
+  {
+    phase: "拍照识别情绪",
+    title: "通过面部与体态识别，快速判断宠物当下情绪",
+    description:
+      "对应视频展示拍照后自动分析耳位、眼神和姿态，帮助你第一时间判断是否需要干预。",
+    videoSrc: emotionRecognitionVideo,
+  },
+  {
+    phase: "视频行为识别",
+    title: "连续追踪动作轨迹，识别潜在异常行为",
+    description:
+      "对应视频展示 AI 对走动、抓挠和停留状态的连续识别，方便判断是短时波动还是持续异常。",
+    videoSrc: behaviorRecognitionVideo,
+  },
+  {
+    phase: "录音识别声音",
+    title: "识别叫声频段变化，提前发现高风险信号",
+    description:
+      "对应视频展示录音样本自动分类与风险提示，让异常叫声更早被注意到。",
+    videoSrc: audioRecognitionVideo,
+  },
+  {
+    phase: "健康分析",
+    title: "将多模态结果汇总，形成可读的健康洞察",
+    description:
+      "对应视频展示评分、趋势和关键指标的联动分析，帮助你快速掌握整体状态。",
+    videoSrc: healthAnalysisVideo,
+  },
+  {
+    phase: "智能问答",
+    title: "结合历史记录对话问诊，快速得到行动建议",
+    description:
+      "对应视频展示围绕症状与历史数据的智能问答流程，减少重复描述成本。",
+    videoSrc: smartQaVideo,
+  },
 ];
 
 const features = [
@@ -459,6 +515,103 @@ function valueTransitionProgress(rect: LayoutRect) {
   return clamp((startTop - rect.y) / (startTop - endTop), 0, 1);
 }
 
+function HeroCopyCarousel({
+  activeIndex,
+  onActiveIndexChange,
+}: {
+  activeIndex: number;
+  onActiveIndexChange: Dispatch<SetStateAction<number>>;
+}) {
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      onActiveIndexChange((prev) => (prev + 1) % heroCarouselSlides.length);
+    }, 4200);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [onActiveIndexChange]);
+
+  const goToSlide = (index: number) => {
+    const length = heroCarouselSlides.length;
+    onActiveIndexChange(((index % length) + length) % length);
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-xl lg:mx-0">
+      <p className="text-sm font-semibold tracking-[0.12em] text-[#9c5f3f] uppercase">
+        第一章节
+      </p>
+      <h2 className="font-rounded-chinese mt-3 text-3xl font-bold leading-tight text-[#3f261c] md:text-4xl">
+        多模态视频演示，逐步看懂宠物健康信号
+      </h2>
+      <p className="mt-4 max-w-lg text-base leading-7 text-[#593828]">
+        左侧 Carousel 的标题与说明会和右侧视频播放器同步切换，帮助你快速理解每个能力场景。
+      </p>
+
+      <div className="hero-copy-carousel__viewport mt-7">
+        <div
+          className="hero-copy-carousel__track"
+          style={{ transform: `translate3d(-${activeIndex * 100}%, 0, 0)` }}
+        >
+          {heroCarouselSlides.map((slide) => (
+            <article className="hero-copy-carousel__slide" key={slide.title}>
+              <p className="text-xs font-semibold tracking-[0.12em] text-[#b06f4a] uppercase">
+                {slide.phase}
+              </p>
+              <h3 className="font-rounded-chinese mt-3 text-2xl font-bold leading-tight text-[#3f261c]">
+                {slide.title}
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-[#5f3e2d] sm:text-base">
+                {slide.description}
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="hero-copy-carousel__nav-btn"
+            onClick={() => goToSlide(activeIndex - 1)}
+            aria-label="上一条说明"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <button
+            type="button"
+            className="hero-copy-carousel__nav-btn"
+            onClick={() => goToSlide(activeIndex + 1)}
+            aria-label="下一条说明"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2" role="tablist" aria-label="视频内容轮播">
+          {heroCarouselSlides.map((slide, index) => (
+            <button
+              key={slide.title}
+              type="button"
+              role="tab"
+              aria-label={`切换到第 ${index + 1} 条`}
+              aria-selected={index === activeIndex}
+              className={`hero-copy-carousel__dot ${
+                index === activeIndex
+                  ? "hero-copy-carousel__dot--active"
+                  : "hero-copy-carousel__dot--idle"
+              }`}
+              onClick={() => goToSlide(index)}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function fitRectToViewport(
   rect: LayoutRect,
   minVisibleHeightRatio: number,
@@ -480,103 +633,88 @@ function fitRectToViewport(
   return { x, y, width, height };
 }
 
-function SharedPhone() {
+function HeroPhoneDashboard() {
   return (
-    <div className="shared-phone">
-      <div className="shared-phone__notch" />
-      <div className="flex h-full flex-col bg-[#fff9f4] pt-7">
-        <div className="flex items-center justify-between px-6 pt-6 pb-2">
-          <div>
-            <div className="text-xs text-[#8c6b5d]">下午 2:30</div>
-            <div className="text-lg font-bold text-[#3d2c24]">今日健康</div>
-          </div>
-          <div className="size-8 rounded-full bg-[#ffd6bb]" />
+    <div className="flex h-full flex-col bg-[#fff9f4] pt-7">
+      <div className="flex items-center justify-between px-6 pt-6 pb-2">
+        <div>
+          <div className="text-xs text-[#8c6b5d]">下午 2:30</div>
+          <div className="text-lg font-bold text-[#3d2c24]">今日健康</div>
         </div>
+        <div className="size-8 rounded-full bg-[#ffd6bb]" />
+      </div>
 
-        <div className="mx-4 mt-2 rounded-3xl bg-white p-6 shadow-soft">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-[#8c6b5d]">综合评分</span>
-            <span className="rounded-full bg-[#e6f4e2] px-2 py-0.5 text-xs font-bold text-[#4c8b3e]">
-              状态良好
-            </span>
-          </div>
-          <div className="mt-4 flex items-end gap-2">
-            <span className="text-5xl font-black text-[#3d2c24]">85</span>
-            <span className="mb-1.5 text-sm text-[#8c6b5d]">/ 100</span>
-          </div>
-          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
-            <div className="h-full w-[85%] rounded-full bg-gradient-to-r from-[#ffcfb5] to-[#ff9362]" />
-          </div>
+      <div className="mx-4 mt-2 rounded-3xl bg-white p-6 shadow-soft">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-[#8c6b5d]">综合评分</span>
+          <span className="rounded-full bg-[#e6f4e2] px-2 py-0.5 text-xs font-bold text-[#4c8b3e]">
+            状态良好
+          </span>
         </div>
+        <div className="mt-4 flex items-end gap-2">
+          <span className="text-5xl font-black text-[#3d2c24]">85</span>
+          <span className="mb-1.5 text-sm text-[#8c6b5d]">/ 100</span>
+        </div>
+        <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
+          <div className="h-full w-[85%] rounded-full bg-gradient-to-r from-[#ffcfb5] to-[#ff9362]" />
+        </div>
+      </div>
 
-        <div className="group mx-4 mt-4 cursor-pointer overflow-hidden rounded-2xl bg-white shadow-soft transition-transform hover:scale-[1.02]">
-          <div className="relative aspect-[16/9]">
-            <img
-              src={dogMonitorShot}
-              alt="智能小宠"
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-md">
-              <div className="size-1.5 animate-pulse rounded-full bg-[#4c8b3e]" />
-              <span className="text-[10px] font-bold tracking-wide text-white">
-                LIVE
-              </span>
-            </div>
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pb-6 pt-12">
-              <div className="flex items-end justify-between text-white">
+      <div className="group mx-4 mt-4 cursor-pointer overflow-hidden rounded-2xl bg-white shadow-soft transition-transform hover:scale-[1.02]">
+        <div className="relative aspect-[16/9]">
+          <img
+            src={dogMonitorShot}
+            alt="智能小宠"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+          <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-md">
+            <div className="size-1.5 animate-pulse rounded-full bg-[#4c8b3e]" />
+            <span className="text-[10px] font-bold tracking-wide text-white">LIVE</span>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 pb-6 pt-12">
+            <div className="flex items-end justify-between text-white">
+              <div>
+                <div className="mb-1 text-[10px] font-medium opacity-90">
+                  当前状态
+                </div>
+                <div className="text-sm font-bold leading-normal">安静休息中</div>
+              </div>
+              <div className="flex gap-4 text-right">
                 <div>
                   <div className="mb-1 text-[10px] font-medium opacity-90">
-                    当前状态
+                    情绪
                   </div>
-                  <div className="text-sm font-bold leading-normal">
-                    安静休息中
-                  </div>
+                  <div className="text-xs font-bold leading-normal">平稳</div>
                 </div>
-                <div className="flex gap-4 text-right">
-                  <div>
-                    <div className="mb-1 text-[10px] font-medium opacity-90">
-                      情绪
-                    </div>
-                    <div className="text-xs font-bold leading-normal">平稳</div>
+                <div>
+                  <div className="mb-1 text-[10px] font-medium opacity-90">
+                    活跃度
                   </div>
-                  <div>
-                    <div className="mb-1 text-[10px] font-medium opacity-90">
-                      活跃度
-                    </div>
-                    <div className="text-xs font-bold leading-normal">中等</div>
-                  </div>
+                  <div className="text-xs font-bold leading-normal">中等</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="mx-4 mt-4 flex-1 rounded-t-3xl bg-white p-6 shadow-soft">
-          <div className="mb-4 text-sm font-bold text-[#3d2c24]">
-            实时监测记录
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-1 size-2 rounded-full bg-[#ff9362]" />
-              <div>
-                <div className="text-sm font-medium text-[#3d2c24]">
-                  检测到异常叫声
-                </div>
-                <div className="text-xs text-[#8c6b5d]">
-                  14:20 · 持续 15秒 · 建议关注
-                </div>
+      <div className="mx-4 mt-4 flex-1 rounded-t-3xl bg-white p-6 shadow-soft">
+        <div className="mb-4 text-sm font-bold text-[#3d2c24]">实时监测记录</div>
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-1 size-2 rounded-full bg-[#ff9362]" />
+            <div>
+              <div className="text-sm font-medium text-[#3d2c24]">
+                检测到异常叫声
               </div>
+              <div className="text-xs text-[#8c6b5d]">14:20 · 持续 15秒 · 建议关注</div>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="mt-1 size-2 rounded-full bg-[#d8efcf]" />
-              <div>
-                <div className="text-sm font-medium text-[#3d2c24]">
-                  进食记录
-                </div>
-                <div className="text-xs text-[#8c6b5d]">
-                  12:30 · 摄入 45g · 正常
-                </div>
-              </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="mt-1 size-2 rounded-full bg-[#d8efcf]" />
+            <div>
+              <div className="text-sm font-medium text-[#3d2c24]">进食记录</div>
+              <div className="text-xs text-[#8c6b5d]">12:30 · 摄入 45g · 正常</div>
             </div>
           </div>
         </div>
@@ -585,9 +723,99 @@ function SharedPhone() {
   );
 }
 
+function SharedPhone({
+  activeSlide,
+  scene,
+}: {
+  activeSlide: HeroCarouselSlide;
+  scene: PhoneScene;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (scene !== "chapter1") {
+      return;
+    }
+
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    video.currentTime = 0;
+    const playback = video.play();
+
+    if (playback) {
+      playback.catch(() => {});
+    }
+  }, [activeSlide.videoSrc, scene]);
+
+  const sceneImage = useMemo(() => {
+    switch (scene) {
+      case "value":
+        return {
+          src: advisorShot,
+          alt: "健康顾问页面",
+        };
+      default:
+        return {
+          src: healthShot,
+          alt: "健康分析页面",
+        };
+    }
+  }, [scene]);
+
+  return (
+    <div className="shared-phone">
+      <div className="shared-phone__notch" />
+      {scene === "chapter1" ? (
+        <div className="shared-phone__video-layout">
+          <div className="shared-phone__video-header">
+            <span className="shared-phone__video-header-label">章节 1 演示</span>
+            <span className="shared-phone__video-header-chip">
+              {activeSlide.phase}
+            </span>
+          </div>
+          <div className="shared-phone__video-frame">
+            <video
+              ref={videoRef}
+              key={activeSlide.videoSrc}
+              src={activeSlide.videoSrc}
+              className="shared-phone__video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+            />
+            <div className="shared-phone__video-overlay" aria-hidden="true">
+              <span className="shared-phone__video-overlay-dot" />
+              <span>正在播放</span>
+            </div>
+          </div>
+        </div>
+      ) : scene === "hero" ? (
+        <HeroPhoneDashboard />
+      ) : (
+        <div className="shared-phone__image-layout">
+          <img
+            src={sceneImage.src}
+            alt={sceneImage.alt}
+            className="shared-phone__image-screen"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function App() {
   const [storyEntry, setStoryEntry] = useState(0);
+  const [heroCarouselIndex, setHeroCarouselIndex] = useState(0);
+  const [phoneScene, setPhoneScene] = useState<PhoneScene>("hero");
   const heroPhoneAnchorRef = useRef<HTMLDivElement>(null);
+  const heroCarouselPhoneAnchorRef = useRef<HTMLDivElement>(null);
   const valuePhoneAnchorRef = useRef<HTMLDivElement>(null);
   const [phonePose, setPhonePose] = useState<PhonePose>({
     x: 0,
@@ -624,7 +852,7 @@ export function App() {
         return;
       }
 
-      const t = Math.min(1, Math.max(0, storyEntry));
+      const storyProgress = clamp(storyEntry, 0, 1);
       const heroRect = rectFromDomRect(heroDomRect);
       const storyVisibleHeightRatio = clamp(
         readCssNumber("--shared-phone-story-visible-height-ratio"),
@@ -633,29 +861,52 @@ export function App() {
       );
       const storyRect = lowerCenterRect(heroRect, storyVisibleHeightRatio);
 
-      let x = lerp(heroRect.x, storyRect.x, t);
-      let y = lerp(heroRect.y, storyRect.y, t);
-      let width = lerp(heroRect.width, storyRect.width, t);
-      let height = lerp(heroRect.height, storyRect.height, t);
-      let rotate = lerp(readCssNumber("--shared-phone-entry-rotate"), 0, t);
+      let x = heroRect.x;
+      let y = heroRect.y;
+      let width = heroRect.width;
+      let height = heroRect.height;
+      let rotate = readCssNumber("--shared-phone-entry-rotate");
+
+      const heroCarouselDomRect =
+        heroCarouselPhoneAnchorRef.current?.getBoundingClientRect();
+      const heroCarouselRect = heroCarouselDomRect
+        ? rectFromDomRect(heroCarouselDomRect)
+        : undefined;
+      const carouselProgress = heroCarouselRect
+        ? valueTransitionProgress(heroCarouselRect)
+        : 0;
+
+      if (heroCarouselRect && carouselProgress > 0) {
+        const targetX = heroCarouselRect.x + (heroCarouselRect.width - width) / 2;
+        const targetY =
+          heroCarouselRect.y + (heroCarouselRect.height - height) / 2;
+        x = lerp(x, targetX, carouselProgress);
+        y = lerp(y, targetY, carouselProgress);
+        rotate = lerp(rotate, 0, carouselProgress);
+      }
+
+      if (storyProgress > 0) {
+        const targetX = storyRect.x + (storyRect.width - width) / 2;
+        const targetY = storyRect.y + (storyRect.height - height) / 2;
+        x = lerp(x, targetX, storyProgress);
+        y = lerp(y, targetY, storyProgress);
+        rotate = lerp(rotate, 0, storyProgress);
+      }
 
       const valueDomRect = valuePhoneAnchorRef.current?.getBoundingClientRect();
       const valueRect = valueDomRect
         ? rectFromDomRect(valueDomRect)
         : undefined;
+      const valueProgress = valueRect ? valueTransitionProgress(valueRect) : 0;
 
       let opacity = 0;
 
-      if (valueRect) {
-        const progress = valueTransitionProgress(valueRect);
-
-        if (progress > 0) {
-          x = lerp(x, valueRect.x, progress);
-          y = lerp(y, valueRect.y, progress);
-          width = lerp(width, valueRect.width, progress);
-          height = lerp(height, valueRect.height, progress);
-          rotate = lerp(rotate, 0, progress);
-        }
+      if (valueRect && valueProgress > 0) {
+        const targetX = valueRect.x + (valueRect.width - width) / 2;
+        const targetY = valueRect.y + (valueRect.height - height) / 2;
+        x = lerp(x, targetX, valueProgress);
+        y = lerp(y, targetY, valueProgress);
+        rotate = lerp(rotate, 0, valueProgress);
       }
 
       ({ x, y, width, height } = fitRectToViewport({
@@ -664,6 +915,38 @@ export function App() {
         width,
         height,
       }, storyVisibleHeightRatio));
+
+      const viewportCenter = window.innerHeight / 2;
+      const candidates: { id: string; scene: PhoneScene }[] = [
+        { id: "top", scene: "hero" },
+        { id: "intro-carousel", scene: "chapter1" },
+        { id: "proof", scene: "chapter2" },
+        { id: "value", scene: "value" },
+      ];
+      let closestScene: PhoneScene = "hero";
+      let closestDistance = Number.POSITIVE_INFINITY;
+
+      for (const candidate of candidates) {
+        const element = document.getElementById(candidate.id);
+        if (!element) {
+          continue;
+        }
+
+        const rect = element.getBoundingClientRect();
+        if (rect.height <= 0) {
+          continue;
+        }
+
+        const sectionCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(sectionCenter - viewportCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestScene = candidate.scene;
+        }
+      }
+
+      setPhoneScene((prev) => (prev === closestScene ? prev : closestScene));
 
       const visible =
         width > 0 &&
@@ -748,7 +1031,12 @@ export function App() {
             storyEntry < 0.02 ? "animate-[float_6s_ease-in-out_infinite]" : ""
           }
         >
-          <SharedPhone />
+          <SharedPhone
+            activeSlide={
+              heroCarouselSlides[heroCarouselIndex] ?? heroCarouselSlides[0]
+            }
+            scene={phoneScene}
+          />
         </div>
       </div>
 
@@ -880,7 +1168,7 @@ export function App() {
 
         <div className="pointer-events-none absolute inset-x-0 bottom-6 z-20 flex justify-center sm:bottom-8">
           <a
-            href="#proof"
+            href="#intro-carousel"
             className="hero-scroll-hint pointer-events-auto inline-flex flex-col items-center gap-1 text-sm font-semibold text-[#734b39]"
             aria-label="向下滚动查看详细内容"
             style={{
@@ -899,6 +1187,27 @@ export function App() {
       </header>
 
       <main className="relative z-10" id="main">
+        <section
+          className="mx-auto min-h-screen max-w-6xl snap-start snap-always px-4 py-20 sm:px-6 lg:box-border lg:flex lg:h-screen lg:flex-col lg:justify-center lg:px-8 lg:py-0"
+          id="intro-carousel"
+        >
+          <div className="grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+            <div className="flex w-full justify-center lg:justify-end">
+              <HeroCopyCarousel
+                activeIndex={heroCarouselIndex}
+                onActiveIndexChange={setHeroCarouselIndex}
+              />
+            </div>
+            <div className="flex w-full justify-center lg:justify-center">
+              <div
+                className="hero-carousel-phone-anchor"
+                ref={heroCarouselPhoneAnchorRef}
+                aria-hidden="true"
+              />
+            </div>
+          </div>
+        </section>
+
         <FullscreenStory
           chapters={storyChapters}
           onEntryProgressChange={setStoryEntry}
