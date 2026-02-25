@@ -348,6 +348,7 @@
   border: 8px solid #3d2c24;
   background: #fffcf9;
   box-shadow: 0 28px 70px -30px rgb(72 43 29 / 48%);
+  aspect-ratio: var(--shared-phone-aspect-ratio);
 }
 
 .shared-phone__notch {
@@ -435,7 +436,7 @@
   display: block;
   height: 100%;
   width: 100%;
-  object-fit: cover;
+  object-fit: contain;
   background: #140e0b;
 }
 

@@ -37,6 +37,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useCallback,
   type CSSProperties,
   type Dispatch,
   type SetStateAction,
@@ -522,16 +523,6 @@ function HeroCopyCarousel({
   activeIndex: number;
   onActiveIndexChange: Dispatch<SetStateAction<number>>;
 }) {
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      onActiveIndexChange((prev) => (prev + 1) % heroCarouselSlides.length);
-    }, 4200);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, [onActiveIndexChange]);
-
   const goToSlide = (index: number) => {
     const length = heroCarouselSlides.length;
     onActiveIndexChange(((index % length) + length) % length);
@@ -726,9 +717,11 @@ function HeroPhoneDashboard() {
 function SharedPhone({
   activeSlide,
   scene,
+  onVideoEnded,
 }: {
   activeSlide: HeroCarouselSlide;
   scene: PhoneScene;
+  onVideoEnded?: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -785,9 +778,9 @@ function SharedPhone({
               className="shared-phone__video"
               autoPlay
               muted
-              loop
               playsInline
               preload="metadata"
+              onEnded={onVideoEnded}
             />
             <div className="shared-phone__video-overlay" aria-hidden="true">
               <span className="shared-phone__video-overlay-dot" />
@@ -996,6 +989,10 @@ export function App() {
   const scrollHintOpacity = Math.max(0, 1 - storyEntry * 10);
   const scrollHintOffset = Math.min(14, storyEntry * 26);
 
+  const handleVideoEnded = useCallback(() => {
+    setHeroCarouselIndex((prev) => (prev + 1) % heroCarouselSlides.length);
+  }, []);
+
   return (
     <div className="relative min-h-screen overflow-x-clip bg-transparent text-[#3d2c24]">
       <Header />
@@ -1036,6 +1033,7 @@ export function App() {
               heroCarouselSlides[heroCarouselIndex] ?? heroCarouselSlides[0]
             }
             scene={phoneScene}
+            onVideoEnded={handleVideoEnded}
           />
         </div>
       </div>
@@ -1188,7 +1186,7 @@ export function App() {
 
       <main className="relative z-10" id="main">
         <section
-          className="mx-auto min-h-screen max-w-6xl snap-start snap-always px-4 py-20 sm:px-6 lg:box-border lg:flex lg:h-screen lg:flex-col lg:justify-center lg:px-8 lg:py-0"
+          className="mx-auto flex min-h-screen max-w-6xl snap-start snap-always flex-col justify-center px-4 py-20 sm:px-6 lg:box-border lg:h-screen lg:px-8 lg:py-0"
           id="intro-carousel"
         >
           <div className="grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
